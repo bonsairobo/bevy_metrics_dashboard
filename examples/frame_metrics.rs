@@ -22,8 +22,16 @@ fn describe_metrics() {
         Unit::Count,
         "The number of frames rendered since app start"
     );
-    describe_gauge!("frame_time", Unit::Milliseconds, "Frame latency");
-    describe_histogram!("frame_time", Unit::Milliseconds, "Frame latency");
+    describe_gauge!(
+        "frame_time",
+        Unit::Milliseconds,
+        "Frame latency in milliseconds"
+    );
+    describe_histogram!(
+        "frame_time",
+        Unit::Milliseconds,
+        "Frame latency in milliseconds"
+    );
 }
 
 fn create_dashboard(mut commands: Commands) {

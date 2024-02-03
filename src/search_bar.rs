@@ -11,7 +11,7 @@ pub fn dropdown_list<T, I, F, S>(
 where
     I: Iterator<Item = T>,
     F: Fn(&T) -> S,
-    S: AsRef<str>,
+    S: Into<WidgetText>,
 {
     let popup_id = ui.make_persistent_id(id_source);
 
@@ -29,7 +29,7 @@ where
 
                 // TODO: implement arrow key browsing, have the one that'd be
                 // selected by enter highlighted
-                if ui.selectable_label(false, text.as_ref()).clicked() || (select_first && first) {
+                if ui.selectable_label(false, text.into()).clicked() || (select_first && first) {
                     return_val = Some(item);
                     ui.memory_mut(|m| m.close_popup());
                 }

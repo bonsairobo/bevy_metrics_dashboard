@@ -1,5 +1,5 @@
 use crate::{
-    registry::{MetricKey, MetricsRegistry},
+    registry::{MetricKey, MetricsRegistry, SearchResult},
     search_bar::dropdown_list,
 };
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
@@ -10,8 +10,8 @@ pub struct MetricsFinder {
     search_input: String,
     input_dirty: bool,
     last_search_time: Instant,
-    search_task: Option<Task<Vec<MetricKey>>>,
-    search_results: Vec<MetricKey>,
+    search_task: Option<Task<Vec<SearchResult>>>,
+    search_results: Vec<SearchResult>,
 }
 
 impl Default for MetricsFinder {
@@ -48,7 +48,7 @@ impl MetricsFinder {
                     ui,
                     "metric-search-dropdown",
                     self.search_results.iter(),
-                    |&s| s.default_title(0),
+                    |&s| s.dropdown_description(),
                 )
                 .cloned()
             })
@@ -75,6 +75,6 @@ impl MetricsFinder {
             self.input_dirty = false;
         }
 
-        maybe_selected
+        maybe_selected.map(|r| r.key)
     }
 }

@@ -16,10 +16,10 @@ use metrics_util::MetricKind;
 use registry::{clear_atomic_buckets, MetricsRegistry};
 
 // TODO:
+// - make plots scrollable
 // - automatic significant figures and units
 // - automatically determine histogram bucket bounds
 // - search by label
-// - display metric descriptions in the dashboard
 // - multiple metrics on one plot
 // - rename and save plots
 // - drag and drop plots (requires egui 0.26)
