@@ -16,9 +16,9 @@ use metrics_util::MetricKind;
 use registry::{clear_atomic_buckets, MetricsRegistry};
 
 // TODO:
-// - automatic significant figures and units
+// - automatic significant figures
 // - automatically determine histogram bucket bounds
-// - search by label
+// - search by label and description
 // - multiple metrics on one plot
 // - rename and save plots
 // - drag and drop plots (requires egui 0.26)
