@@ -3,7 +3,7 @@ use bevy::{
     prelude::{default, Res, Resource},
     utils::HashMap,
 };
-use bevy_egui::egui::{text::LayoutJob, Color32, Stroke, TextFormat};
+use bevy_egui::egui::{text::LayoutJob, Color32, TextFormat};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use metrics::{Counter, Gauge, Histogram, Key, KeyName, Metadata, Recorder, SharedString, Unit};
 use metrics_util::{

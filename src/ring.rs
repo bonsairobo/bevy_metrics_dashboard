@@ -14,6 +14,10 @@ impl<T: Clone + Default> Ring<T> {
         }
     }
 
+    pub fn max_len(&self) -> usize {
+        self.max_len
+    }
+
     pub fn set_max_len(&mut self, new_max_len: usize) {
         self.max_len = new_max_len;
 
@@ -24,10 +28,6 @@ impl<T: Clone + Default> Ring<T> {
         if self.max_len < self.elements.len() {
             self.elements.truncate(self.max_len);
         }
-    }
-
-    pub fn len(&self) -> usize {
-        self.elements.len()
     }
 
     pub fn latest(&self) -> Option<&T> {

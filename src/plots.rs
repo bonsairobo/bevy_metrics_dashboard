@@ -303,7 +303,7 @@ impl HistogramData {
             let mut taken = 0;
             self.source.data_with(|block| {
                 let mut block_iter = block.iter().rev().copied();
-                while taken < ring.len() {
+                while taken < ring.max_len() {
                     if let Some(value) = block_iter.next() {
                         ring.push(value);
                         taken += 1;
