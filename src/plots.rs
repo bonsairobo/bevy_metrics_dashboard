@@ -108,7 +108,7 @@ impl CounterData {
             .add(Slider::new(&mut self.config.window_size, 100..=1000).text("Window Size"))
             .changed()
         {
-            self.ring.resize(self.config.window_size);
+            self.ring.set_max_len(self.config.window_size);
         }
     }
 
@@ -156,7 +156,7 @@ impl GaugeData {
             .add(Slider::new(&mut self.config.window_size, 100..=1000).text("Window Size"))
             .changed()
         {
-            self.ring.resize(self.config.window_size);
+            self.ring.set_max_len(self.config.window_size);
         }
     }
 
@@ -303,7 +303,7 @@ impl HistogramData {
             let mut taken = 0;
             self.source.data_with(|block| {
                 let mut block_iter = block.iter().rev().copied();
-                while taken < ring.size() {
+                while taken < ring.len() {
                     if let Some(value) = block_iter.next() {
                         ring.push(value);
                         taken += 1;
@@ -416,8 +416,9 @@ fn draw_plot(name: &str, data: &mut MetricPlotData, ui: &mut Ui) {
                 data.configure_ui(ui);
             });
 
-            let latest = data.ring.latest();
-            ui.label(format!("latest = {latest:.3}"));
+            if let Some(latest) = data.ring.latest() {
+                ui.label(format!("latest = {latest:.3}"));
+            }
 
             let line = data.make_line();
             new_plot()
@@ -429,8 +430,9 @@ fn draw_plot(name: &str, data: &mut MetricPlotData, ui: &mut Ui) {
                 data.configure_ui(ui);
             });
 
-            let latest = data.ring.latest();
-            ui.label(format!("latest = {latest:.3}"));
+            if let Some(latest) = data.ring.latest() {
+                ui.label(format!("latest = {latest:.3}"));
+            }
 
             let line = data.make_line();
             new_plot()
