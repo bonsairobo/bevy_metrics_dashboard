@@ -71,17 +71,20 @@ impl DashboardWindow {
 
     pub fn draw_plots(&mut self, cached_configs: &mut CachedPlotConfigs, ui: &mut Ui) {
         let mut remove_plots = Vec::new();
-        for (i, plot) in self.plots.iter_mut().enumerate().rev() {
-            let action = plot.draw(ui);
 
-            #[allow(clippy::single_match)]
-            match action {
-                Some(PlotAction::Remove) => {
-                    remove_plots.push(i);
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            for (i, plot) in self.plots.iter_mut().enumerate().rev() {
+                let action = plot.draw(ui);
+
+                #[allow(clippy::single_match)]
+                match action {
+                    Some(PlotAction::Remove) => {
+                        remove_plots.push(i);
+                    }
+                    None => (),
                 }
-                None => (),
             }
-        }
+        });
 
         for i in remove_plots {
             let plot = self.plots.remove(i);

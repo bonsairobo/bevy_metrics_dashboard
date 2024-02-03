@@ -16,7 +16,6 @@ use metrics_util::MetricKind;
 use registry::{clear_atomic_buckets, MetricsRegistry};
 
 // TODO:
-// - make plots scrollable
 // - automatic significant figures and units
 // - automatically determine histogram bucket bounds
 // - search by label

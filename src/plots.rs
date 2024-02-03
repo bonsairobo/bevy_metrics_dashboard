@@ -408,7 +408,7 @@ fn add_value_to_bucket(bucket_bounds: &[f64], value: f64, bucket_counts: &mut [u
 }
 
 fn draw_plot(name: &str, data: &mut MetricPlotData, ui: &mut Ui) {
-    let new_plot = || Plot::new(name).view_aspect(2.0);
+    let new_plot = || Plot::new(name).allow_scroll(false).view_aspect(2.0);
 
     match data {
         MetricPlotData::Counter(data) => {
