@@ -1,15 +1,18 @@
 A metrics dashboard for Bevy.
 
 This library enables Bevy apps to search and plot any metrics defined by
-the [`metrics`](https://metrics.rs/) "ecosystem".
+the [`metrics`](https://metrics.rs/) crate within the app itself.
 
 ![screen](https://raw.githubusercontent.com/bonsairobo/bevy_metrics_dashboard/main/images/screen.png)
 
 # Should I use this?
 
-1. Do you find custom metrics useful when debugging?
-1. Do you like the `metrics` ecosystem?
-1. Do you want a cheap way to observe your metrics directly within your Bevy app?
+This library is **not** a replacement for tools that export metrics into
+a monitoring service with a time series database, nor does it reject that
+methodology. This library is a supplemental tool that allows users to cheaply
+plot high-resolution metrics in real time within the app that defines them. As
+such, this tool shines when you are debugging an issue that is reproducible and
+requires real-time feedback or ad-hoc instrumentation.
 
 # Getting Started
 
@@ -29,14 +32,5 @@ The `metrics` crate lets developers define metrics in their code using simple
 macros. Each process has a global registry (AKA "recorder") of all of the
 metrics that have been used or described in code.
 
-Many existing metrics "exporters" will use their registry to send metrics to a
-monitoring service like Prometheus or CloudWatch. This is great for retaining
-data about a complex system and going back days or even months to see details
-about what a system was doing right before it exploded and destroyed all of your
-photos.
-
-But sometimes it's useful to just see your metrics live in high resolution
-without any external service dependencies. This is what `bevy_metrics_dashboard`
-lets you do; all metrics can be plotted directly in the application where they
-are defined. The provided Bevy plugin defines and installs a registry, and the
-dashboard widget lets users search for metrics and plot them.
+The provided Bevy plugin defines and installs a registry, and the dashboard
+widget lets users search the registry and plot metrics.
