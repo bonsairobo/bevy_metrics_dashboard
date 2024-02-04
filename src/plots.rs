@@ -1,7 +1,7 @@
 use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
 use bevy::prelude::default;
-use bevy_egui::egui::{Color32, Slider, TextEdit, Ui};
+use bevy_egui::egui::{Color32, DragValue, Slider, Ui};
 use egui_plot::{Bar, BarChart, Line, Plot, PlotPoints};
 use float_ord::FloatOrd;
 use metrics::atomics::AtomicU64;
@@ -59,24 +59,78 @@ pub struct HistogramPlotConfig {
     /// data. Otherwise, the bar chart retains all data until it is reset or
     /// reconfigured.
     window_size: Option<usize>,
-    /// Sorted list of boundaries between contiguous bucket ranges.
-    bucket_bounds: SmallVec<[f64; 16]>,
-    bucket_bounds_input: String,
+    buckets: BucketConfig,
 }
 
 impl Default for HistogramPlotConfig {
     fn default() -> Self {
-        // Just initial values. These are configurable in the UI.
-        let bucket_bounds: SmallVec<[f64; 16]> = (10..20).map(|i| i as f64).collect();
-        let mut bucket_bounds_input = String::new();
-        for bound in bucket_bounds.iter() {
-            bucket_bounds_input.push_str(&bound.to_string());
-            bucket_bounds_input.push(' ');
-        }
         Self {
             window_size: Some(500),
-            bucket_bounds,
-            bucket_bounds_input,
+            buckets: default(),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct BucketConfig {
+    /// Sorted list of boundaries between contiguous bucket ranges.
+    bounds: BoundsVec,
+    range_input: BucketRange,
+}
+
+type BoundsVec = SmallVec<[f64; 16]>;
+type CountsVec = SmallVec<[u32; 16]>;
+
+#[derive(Clone)]
+struct BucketRange {
+    min: f64,
+    max: f64,
+    n_buckets: usize,
+}
+
+impl BucketRange {
+    fn clamp(&mut self) {
+        self.min = self.min.min(self.max - f64::EPSILON);
+        self.max = (self.min + f64::EPSILON).max(self.max);
+    }
+
+    fn get_bounds(&self) -> BoundsVec {
+        assert!(self.max > self.min);
+        let width = (self.max - self.min) / self.n_buckets as f64;
+        (0..=self.n_buckets)
+            .map(|i| self.min + i as f64 * width)
+            .collect()
+    }
+}
+
+impl Default for BucketRange {
+    fn default() -> Self {
+        Self {
+            min: 0.0,
+            max: 10.0,
+            n_buckets: 10,
+        }
+    }
+}
+
+impl BucketConfig {
+    fn get_bounds(&self) -> Option<BoundsVec> {
+        let mut new_bounds = self.range_input.get_bounds();
+        if new_bounds.is_empty() {
+            return None;
+        }
+        new_bounds.sort_unstable_by_key(|&b| FloatOrd(b));
+        Some(new_bounds)
+    }
+}
+
+impl Default for BucketConfig {
+    fn default() -> Self {
+        let range_input = BucketRange::default();
+        let bounds = range_input.get_bounds();
+        Self {
+            bounds,
+            range_input,
         }
     }
 }
@@ -184,14 +238,14 @@ impl GaugeData {
 struct HistogramData {
     source: Arc<AtomicBucket<f64>>,
     ring: Option<Ring<f64>>,
-    bucket_counts: SmallVec<[u32; 16]>,
+    bucket_counts: CountsVec,
 
     config: HistogramPlotConfig,
 }
 
 impl HistogramData {
     fn new(config: HistogramPlotConfig, source: Arc<AtomicBucket<f64>>) -> Self {
-        let n_buckets = config.bucket_bounds.len() + 1;
+        let n_buckets = config.buckets.bounds.len() + 1;
 
         Self {
             source,
@@ -202,6 +256,37 @@ impl HistogramData {
     }
 
     fn configure_ui(&mut self, ui: &mut Ui) {
+        let mut update = false;
+        ui.horizontal(|ui| {
+            update |= ui
+                .add(
+                    DragValue::new(&mut self.config.buckets.range_input.n_buckets)
+                        .prefix("Buckets: ")
+                        .speed(0.1),
+                )
+                .changed();
+            update |= ui
+                .add(
+                    DragValue::new(&mut self.config.buckets.range_input.min)
+                        .prefix("Min: ")
+                        .speed(0.1),
+                )
+                .changed();
+            update |= ui
+                .add(
+                    DragValue::new(&mut self.config.buckets.range_input.max)
+                        .prefix("Max: ")
+                        .speed(0.1),
+                )
+                .changed();
+        });
+        if update {
+            self.config.buckets.range_input.clamp();
+            self.update_bounds_from_input();
+        }
+
+        ui.separator();
+
         let mut use_sliding_window = self.config.window_size.is_some();
         if ui
             .checkbox(&mut use_sliding_window, "Sliding Window")
@@ -221,46 +306,24 @@ impl HistogramData {
                 self.ring = Some(Ring::new(*window_size));
             }
         }
-        ui.horizontal(|ui| {
-            ui.label("Bounds:");
-            let response = TextEdit::singleline(&mut self.config.bucket_bounds_input)
-                .hint_text("bucket bounds")
-                .show(ui)
-                .response;
-            if response.changed() {
-                self.update_bounds_from_input();
-            }
-        });
     }
 
     fn update_bounds_from_input(&mut self) {
-        // Parse bounds as a whitespace-delimited list.
-        let mut new_bounds = SmallVec::<[f64; 16]>::new();
-        for token in self.config.bucket_bounds_input.split_whitespace() {
-            let Ok(bound) = token.parse() else {
-                return;
-            };
-            new_bounds.push(bound);
-        }
-
-        if new_bounds.is_empty() {
+        let Some(new_bounds) = self.config.buckets.get_bounds() else {
             return;
-        }
+        };
 
-        self.config.bucket_bounds = new_bounds;
-        self.config
-            .bucket_bounds
-            .sort_unstable_by_key(|&b| FloatOrd(b));
+        self.config.buckets.bounds = new_bounds;
 
         self.bucket_counts
-            .resize(self.config.bucket_bounds.len() + 1, 0);
+            .resize(self.config.buckets.bounds.len() + 1, 0);
         self.bucket_counts.fill(0);
     }
 
     fn make_bar_chart(&self) -> BarChart {
         assert_eq!(
             self.bucket_counts.len(),
-            self.config.bucket_bounds.len() + 1
+            self.config.buckets.bounds.len() + 1
         );
 
         let mut bars: Vec<_> = self
@@ -270,7 +333,7 @@ impl HistogramData {
             .collect();
 
         let mut avg_bar_width = 0.0;
-        for (window_i, edges) in self.config.bucket_bounds.windows(2).enumerate() {
+        for (window_i, edges) in self.config.buckets.bounds.windows(2).enumerate() {
             let start = edges[0];
             let end = edges[1];
             let bar_i = window_i + 1;
@@ -281,10 +344,10 @@ impl HistogramData {
             bar.bar_width = width;
             avg_bar_width += width;
         }
-        avg_bar_width /= (self.config.bucket_bounds.len() - 1) as f64;
+        avg_bar_width /= (self.config.buckets.bounds.len() - 1) as f64;
 
-        let start = self.config.bucket_bounds[0];
-        let end = *self.config.bucket_bounds.last().unwrap();
+        let start = self.config.buckets.bounds[0];
+        let end = *self.config.buckets.bounds.last().unwrap();
 
         let fst_bar = &mut bars[0];
         fst_bar.argument = start - 0.5 * avg_bar_width;
@@ -321,13 +384,17 @@ impl HistogramData {
                 }
             });
             for &value in ring.iter_chronological() {
-                add_value_to_bucket(&self.config.bucket_bounds, value, &mut self.bucket_counts);
+                add_value_to_bucket(&self.config.buckets.bounds, value, &mut self.bucket_counts);
             }
         } else {
             // Keep adding to the existing buckets.
             self.source.data_with(|block| {
                 for &value in block {
-                    add_value_to_bucket(&self.config.bucket_bounds, value, &mut self.bucket_counts);
+                    add_value_to_bucket(
+                        &self.config.buckets.bounds,
+                        value,
+                        &mut self.bucket_counts,
+                    );
                 }
             });
         }

@@ -39,7 +39,6 @@ fn describe_metrics() {
 
 fn create_dashboard(mut commands: Commands) {
     commands.spawn(DashboardWindow::new("Metrics Dashboard"));
-    commands.spawn(DashboardWindow::new("Metrics Dashboard 2"));
 }
 
 fn update_metrics(time: Res<Time>) {
