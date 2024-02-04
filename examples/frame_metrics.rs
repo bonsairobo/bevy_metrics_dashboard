@@ -9,13 +9,16 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
-        .add_plugins(DashboardPlugin)
+        .add_plugins(DashboardPlugin::default())
         .add_systems(Startup, (describe_metrics, create_dashboard))
         .add_systems(Update, update_metrics)
         .run();
 }
 
 // Just needs to happen after the DashboardPlugin is added.
+//
+// NOTE: If you want to describe counters **before** creating your
+// Bevy app, see DashboardPlugin::with_registry.
 fn describe_metrics() {
     describe_counter!(
         "num_frames",
