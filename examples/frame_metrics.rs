@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use bevy_metrics_dashboard::{dashboard_window::DashboardWindow, DashboardPlugin};
+use bevy_metrics_dashboard::{DashboardPlugin, DashboardWindow};
 use metrics::{
     counter, describe_counter, describe_gauge, describe_histogram, gauge, histogram, Unit,
 };
@@ -17,8 +17,8 @@ fn main() {
 
 // Just needs to happen after the DashboardPlugin is added.
 //
-// NOTE: If you want to describe counters **before** creating your
-// Bevy app, see DashboardPlugin::with_registry.
+// NOTE: If you want to describe counters **before** creating your Bevy app, see
+// DashboardPlugin::with_registry.
 fn describe_metrics() {
     describe_counter!(
         "num_frames",
