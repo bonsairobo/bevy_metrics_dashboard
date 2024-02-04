@@ -1,16 +1,23 @@
-use crate::{
-    dashboard_window::CachedPlotConfigs, registry::clear_atomic_buckets, DashboardWindow,
-    MetricsRegistry,
-};
+use crate::{registry::clear_atomic_buckets, MetricsRegistry};
 use bevy::prelude::*;
 use metrics::set_global_recorder;
 
+/// Installs and garbage collects a [`MetricsRegistry`].
+///
+/// See [`ClearBucketsSet`] to avoid system ordering issues.
 #[derive(Default)]
-pub struct DashboardPlugin {
+pub struct RegistryPlugin {
     registry: Option<MetricsRegistry>,
 }
 
-impl DashboardPlugin {
+/// The [`SystemSet`] from which atomic buckets are cleared.
+///
+/// Histogram consumer systems should run in the [`Last`] schedule **before**
+/// this set to avoid missing samples.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, SystemSet)]
+pub struct ClearBucketsSystem;
+
+impl RegistryPlugin {
     pub fn new() -> Self {
         Self::default()
     }
@@ -27,9 +34,8 @@ impl DashboardPlugin {
     }
 }
 
-impl Plugin for DashboardPlugin {
+impl Plugin for RegistryPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        let app = app.init_resource::<CachedPlotConfigs>();
         let registry = if let Some(registry) = &self.registry {
             _ = set_global_recorder(registry.clone());
             registry.clone()
@@ -41,10 +47,6 @@ impl Plugin for DashboardPlugin {
             registry
         };
         app.insert_resource(registry)
-            .add_systems(
-                Update,
-                (DashboardWindow::update_all, DashboardWindow::draw_all),
-            )
-            .add_systems(Last, clear_atomic_buckets);
+            .add_systems(Last, clear_atomic_buckets.in_set(ClearBucketsSystem));
     }
 }

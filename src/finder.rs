@@ -1,6 +1,6 @@
 use crate::{
+    dropdown_list::dropdown_list,
     registry::{MetricsRegistry, SearchResult},
-    search_bar::dropdown_list,
 };
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
 use bevy_egui::egui::{TextEdit, Ui};

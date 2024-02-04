@@ -15,6 +15,12 @@ categories = ["development-tools", "game-development"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.dev]
+opt-level = 2
+
+[features]
+render_metrics = ["bevy/bevy_core_pipeline"]
+
 [dependencies]
 bevy_egui = "0.24.0"
 egui_plot = "0.24.2"
@@ -29,7 +35,15 @@ version = "0.12.1"
 default-features = false
 features = ["multi-threaded"]
 
-[dev-dependencies.bevy]
-version = "0.12.1"
-default-features = false
-features = ["bevy_winit", "x11"]
+[dev-dependencies]
+bevy = "0.12.1"
+rand = "0.8.5"
+
+[[example]]
+name = "stress"
+path = "examples/stress.rs"
+required-features = ["render_metrics"]
+
+[[example]]
+name = "many_metrics"
+path = "examples/many_metrics.rs"

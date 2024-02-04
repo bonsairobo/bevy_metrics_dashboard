@@ -10,6 +10,12 @@ use metrics_util::{AtomicBucket, MetricKind};
 use smallvec::{smallvec, SmallVec};
 use std::sync::{atomic::Ordering, Arc};
 
+// BUG: If you have a constant metric, it results in a perfectly horizontal line
+// plot. Such a plot seems invisible because the axes auto-fit with a height
+// of zero.
+
+const WINDOW_RANGE: [usize; 2] = [100, 5000];
+
 #[derive(Clone)]
 pub enum MetricPlotConfig {
     Counter(CounterPlotConfig),
@@ -170,7 +176,13 @@ impl CounterData {
 
     fn configure_ui(&mut self, ui: &mut Ui) {
         if ui
-            .add(Slider::new(&mut self.config.window_size, 100..=1000).text("Window Size"))
+            .add(
+                Slider::new(
+                    &mut self.config.window_size,
+                    WINDOW_RANGE[0]..=WINDOW_RANGE[1],
+                )
+                .text("Window Size"),
+            )
             .changed()
         {
             self.ring.set_max_len(self.config.window_size);
@@ -178,12 +190,13 @@ impl CounterData {
     }
 
     fn make_line(&self) -> Line {
-        Line::new(PlotPoints::from_ys_f64(
-            &self
-                .ring
+        Line::new(PlotPoints::Owned(
+            self.ring
                 .iter_chronological()
-                .map(|&u| u as f64)
-                .collect::<Vec<_>>(),
+                .copied()
+                .enumerate()
+                .map(|(i, y)| [i as f64, y as f64].into())
+                .collect(),
         ))
     }
 
@@ -216,7 +229,13 @@ impl GaugeData {
 
     fn configure_ui(&mut self, ui: &mut Ui) {
         if ui
-            .add(Slider::new(&mut self.config.window_size, 100..=1000).text("Window Size"))
+            .add(
+                Slider::new(
+                    &mut self.config.window_size,
+                    WINDOW_RANGE[0]..=WINDOW_RANGE[1],
+                )
+                .text("Window Size"),
+            )
             .changed()
         {
             self.ring.set_max_len(self.config.window_size);
@@ -227,8 +246,13 @@ impl GaugeData {
     }
 
     fn make_line(&self) -> Line {
-        Line::new(PlotPoints::from_ys_f64(
-            &self.ring.iter_chronological().copied().collect::<Vec<_>>(),
+        Line::new(PlotPoints::Owned(
+            self.ring
+                .iter_chronological()
+                .copied()
+                .enumerate()
+                .map(|(i, y)| [i as f64, y].into())
+                .collect(),
         ))
     }
 
@@ -305,7 +329,9 @@ impl HistogramData {
         if use_sliding_window {
             let window_size = self.config.window_size.get_or_insert(500);
             if ui
-                .add(Slider::new(window_size, 100..=1000).text("Window Size"))
+                .add(
+                    Slider::new(window_size, WINDOW_RANGE[0]..=WINDOW_RANGE[1]).text("Window Size"),
+                )
                 .changed()
             {
                 self.ring = Some(Ring::new(*window_size));

@@ -19,7 +19,7 @@ pub struct MetricsRegistry {
 
 pub(crate) struct Inner {
     pub registry: Registry<Key, AtomicStorage>,
-    pub descriptions: RwLock<HashMap<MetricKey, MetricDescription>>,
+    pub descriptions: RwLock<HashMap<DescriptionKey, MetricDescription>>,
 }
 
 #[derive(Clone)]
@@ -56,28 +56,31 @@ impl MetricsRegistry {
         reg.visit_counters(|key, _| {
             if matcher.fuzzy_match(key.name(), input).is_some() {
                 let key = MetricKey::new(key.clone(), MetricKind::Counter);
-                let description = descriptions.get(&key).cloned();
+                let desc_key = DescriptionKey::from(&key);
+                let description = descriptions.get(&desc_key).cloned();
                 results.push(SearchResult { key, description });
             }
         });
         reg.visit_gauges(|key, _| {
             if matcher.fuzzy_match(key.name(), input).is_some() {
                 let key = MetricKey::new(key.clone(), MetricKind::Gauge);
-                let description = descriptions.get(&key).cloned();
+                let desc_key = DescriptionKey::from(&key);
+                let description = descriptions.get(&desc_key).cloned();
                 results.push(SearchResult { key, description });
             }
         });
         reg.visit_histograms(|key, _| {
             if matcher.fuzzy_match(key.name(), input).is_some() {
                 let key = MetricKey::new(key.clone(), MetricKind::Histogram);
-                let description = descriptions.get(&key).cloned();
+                let desc_key = DescriptionKey::from(&key);
+                let description = descriptions.get(&desc_key).cloned();
                 results.push(SearchResult { key, description });
             }
         });
         results
     }
 
-    fn add_description_if_missing(&self, key: MetricKey, description: MetricDescription) {
+    fn add_description_if_missing(&self, key: DescriptionKey, description: MetricDescription) {
         let mut descriptions = self.inner.descriptions.write().unwrap();
         descriptions.entry(key).or_insert(description);
     }
@@ -113,6 +116,21 @@ impl MetricKey {
     }
 }
 
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct DescriptionKey {
+    pub name: KeyName,
+    pub kind: MetricKind,
+}
+
+impl From<&MetricKey> for DescriptionKey {
+    fn from(value: &MetricKey) -> Self {
+        Self {
+            name: KeyName::from(value.key.name().to_owned()),
+            kind: value.kind,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct SearchResult {
     pub key: MetricKey,
@@ -131,6 +149,17 @@ impl SearchResult {
                 ..default()
             },
         );
+        for label in self.key.key.labels() {
+            job.append("\n", 0.0, default());
+            job.append(
+                &format!("{}={}", label.key(), label.value()),
+                0.0,
+                TextFormat {
+                    color: Color32::YELLOW,
+                    ..default()
+                },
+            );
+        }
         if let Some(description) = &self.description {
             job.append("\n", 0.0, default());
             job.append(
@@ -150,8 +179,8 @@ impl SearchResult {
 impl Recorder for MetricsRegistry {
     fn describe_counter(&self, key_name: KeyName, unit: Option<Unit>, description: SharedString) {
         self.add_description_if_missing(
-            MetricKey {
-                key: Key::from_name(key_name),
+            DescriptionKey {
+                name: key_name,
                 kind: MetricKind::Counter,
             },
             MetricDescription {
@@ -163,8 +192,8 @@ impl Recorder for MetricsRegistry {
 
     fn describe_gauge(&self, key_name: KeyName, unit: Option<Unit>, description: SharedString) {
         self.add_description_if_missing(
-            MetricKey {
-                key: Key::from_name(key_name),
+            DescriptionKey {
+                name: key_name,
                 kind: MetricKind::Gauge,
             },
             MetricDescription {
@@ -176,8 +205,8 @@ impl Recorder for MetricsRegistry {
 
     fn describe_histogram(&self, key_name: KeyName, unit: Option<Unit>, description: SharedString) {
         self.add_description_if_missing(
-            MetricKey {
-                key: Key::from_name(key_name),
+            DescriptionKey {
+                name: key_name,
                 kind: MetricKind::Histogram,
             },
             MetricDescription {
