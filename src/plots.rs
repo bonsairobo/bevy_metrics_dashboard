@@ -5,6 +5,7 @@ use bevy_egui::egui::{Color32, Slider, TextEdit, Ui};
 use egui_plot::{Bar, BarChart, Line, Plot, PlotPoints};
 use float_ord::FloatOrd;
 use metrics::atomics::AtomicU64;
+use metrics::Unit;
 use metrics_util::{AtomicBucket, MetricKind};
 use smallvec::{smallvec, SmallVec};
 use std::sync::{atomic::Ordering, Arc};
@@ -83,6 +84,7 @@ impl Default for HistogramPlotConfig {
 pub struct MetricPlot {
     pub name: String,
     pub key: MetricKey,
+    pub unit: Option<Unit>,
     data: MetricPlotData,
 }
 
@@ -337,6 +339,7 @@ impl MetricPlot {
         registry: &MetricsRegistry,
         name: impl Into<String>,
         key: MetricKey,
+        unit: Option<Unit>,
         config: MetricPlotConfig,
     ) -> Self {
         let data = match config {
@@ -363,6 +366,7 @@ impl MetricPlot {
         Self {
             name: name.into(),
             key,
+            unit,
             data,
         }
     }
@@ -392,13 +396,15 @@ impl MetricPlot {
     pub fn draw(&mut self, ui: &mut Ui) -> Option<PlotAction> {
         let mut action = None;
 
-        let Self { name, data, .. } = self;
+        let Self {
+            name, unit, data, ..
+        } = self;
 
         ui.collapsing(&*name, |ui| {
             if ui.button("Remove").clicked() {
                 action = Some(PlotAction::Remove);
             }
-            draw_plot(name, data, ui);
+            draw_plot(name, *unit, data, ui);
         });
 
         action
@@ -413,7 +419,7 @@ fn add_value_to_bucket(bucket_bounds: &[f64], value: f64, bucket_counts: &mut [u
     bucket_counts[bucket_i] += 1;
 }
 
-fn draw_plot(name: &str, data: &mut MetricPlotData, ui: &mut Ui) {
+fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut Ui) {
     let new_plot = || Plot::new(name).allow_scroll(false).view_aspect(2.0);
 
     match data {
@@ -427,9 +433,11 @@ fn draw_plot(name: &str, data: &mut MetricPlotData, ui: &mut Ui) {
             }
 
             let line = data.make_line();
-            new_plot()
-                .x_axis_label("frame")
-                .show(ui, |plot_ui| plot_ui.line(line));
+            let mut plot = new_plot().x_axis_label("frame");
+            if let Some(unit) = unit {
+                plot = plot.y_axis_label(unit_axis_label(unit));
+            }
+            plot.show(ui, |plot_ui| plot_ui.line(line));
         }
         MetricPlotData::Gauge(data) => {
             ui.collapsing("Settings", |ui| {
@@ -441,9 +449,11 @@ fn draw_plot(name: &str, data: &mut MetricPlotData, ui: &mut Ui) {
             }
 
             let line = data.make_line();
-            new_plot()
-                .x_axis_label("frame")
-                .show(ui, |plot_ui| plot_ui.line(line));
+            let mut plot = new_plot().x_axis_label("frame");
+            if let Some(unit) = unit {
+                plot = plot.y_axis_label(unit_axis_label(unit));
+            }
+            plot.show(ui, |plot_ui| plot_ui.line(line));
         }
         MetricPlotData::Histogram(data) => {
             ui.collapsing("Settings", |ui| {
@@ -451,15 +461,39 @@ fn draw_plot(name: &str, data: &mut MetricPlotData, ui: &mut Ui) {
             });
 
             let chart = data.make_bar_chart();
-            new_plot()
-                .y_axis_label("count")
-                .show(ui, |plot_ui| plot_ui.bar_chart(chart));
+            let mut plot = new_plot().y_axis_label("count");
+            if let Some(unit) = unit {
+                plot = plot.x_axis_label(unit_axis_label(unit));
+            }
+            plot.show(ui, |plot_ui| plot_ui.bar_chart(chart));
         }
     }
 }
 
 pub enum PlotAction {
     Remove,
+}
+
+fn unit_axis_label(unit: Unit) -> &'static str {
+    match unit {
+        Unit::Count => "count",
+        Unit::Percent => "%",
+        Unit::Seconds => "s",
+        Unit::Milliseconds => "ms",
+        Unit::Microseconds => "μs",
+        Unit::Nanoseconds => "ns",
+        Unit::Tebibytes => "TiB",
+        Unit::Gigibytes => "GiB",
+        Unit::Mebibytes => "MiB",
+        Unit::Kibibytes => "KiB",
+        Unit::Bytes => "B",
+        Unit::TerabitsPerSecond => "Tb/s",
+        Unit::GigabitsPerSecond => "Gb/s",
+        Unit::MegabitsPerSecond => "Mb/s",
+        Unit::KilobitsPerSecond => "Kb/s",
+        Unit::BitsPerSecond => "b/s",
+        Unit::CountPerSecond => "hz",
+    }
 }
 
 struct Smoother {

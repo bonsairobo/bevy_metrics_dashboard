@@ -51,16 +51,21 @@ impl DashboardWindow {
             egui::Window::new(&window.title).show(ctxt, |ui| {
                 if let Some(selected) = window.finder.draw(&registry, ui) {
                     // If we already have this metric, give it a unique name.
-                    let n_duplicates = window.plots.iter().filter(|p| p.key == selected).count();
+                    let n_duplicates = window
+                        .plots
+                        .iter()
+                        .filter(|p| p.key == selected.key)
+                        .count();
 
                     let plot_config = cached_configs
-                        .get(&selected)
+                        .get(&selected.key)
                         .cloned()
-                        .unwrap_or_else(|| MetricPlotConfig::default_for_kind(selected.kind));
+                        .unwrap_or_else(|| MetricPlotConfig::default_for_kind(selected.key.kind));
                     window.plots.push(MetricPlot::new(
                         &registry,
-                        selected.default_title(n_duplicates),
-                        selected,
+                        selected.key.default_title(n_duplicates),
+                        selected.key,
+                        selected.description.and_then(|d| d.unit),
                         plot_config,
                     ));
                 }

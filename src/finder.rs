@@ -1,5 +1,5 @@
 use crate::{
-    registry::{MetricKey, MetricsRegistry, SearchResult},
+    registry::{MetricsRegistry, SearchResult},
     search_bar::dropdown_list,
 };
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
@@ -31,7 +31,7 @@ impl MetricsFinder {
         }
     }
 
-    pub fn draw(&mut self, registry: &MetricsRegistry, ui: &mut Ui) -> Option<MetricKey> {
+    pub fn draw(&mut self, registry: &MetricsRegistry, ui: &mut Ui) -> Option<SearchResult> {
         // Draw search box.
         let maybe_selected = ui
             .horizontal(|ui| {
@@ -75,6 +75,6 @@ impl MetricsFinder {
             self.input_dirty = false;
         }
 
-        maybe_selected.map(|r| r.key)
+        maybe_selected
     }
 }
