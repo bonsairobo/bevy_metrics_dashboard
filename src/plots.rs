@@ -1,3 +1,5 @@
+//! Widgets for plotting metrics.
+
 use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
 use bevy::prelude::default;
@@ -64,8 +66,8 @@ pub struct HistogramPlotConfig {
     /// When `Some`, the bar chart is derived from a sliding window of
     /// data. Otherwise, the bar chart retains all data until it is reset or
     /// reconfigured.
-    window_size: Option<usize>,
-    buckets: BucketConfig,
+    pub window_size: Option<usize>,
+    pub buckets: BucketConfig,
 }
 
 impl Default for HistogramPlotConfig {
@@ -80,30 +82,32 @@ impl Default for HistogramPlotConfig {
 #[derive(Clone)]
 pub struct BucketConfig {
     /// Sorted list of boundaries between contiguous bucket ranges.
-    bounds: BoundsVec,
-    range_input: BucketRange,
+    pub bounds: BoundsVec,
+    pub range_input: BucketRange,
 }
 
-type BoundsVec = SmallVec<[f64; 16]>;
-type CountsVec = SmallVec<[u32; 16]>;
+pub type BoundsVec = SmallVec<[f64; 16]>;
+pub type CountsVec = SmallVec<[u32; 16]>;
 
 #[derive(Clone)]
-struct BucketRange {
-    min: f64,
-    max: f64,
-    n_buckets: usize,
+pub struct BucketRange {
+    pub n_buckets: usize,
+    pub min: f64,
+    pub max: f64,
 }
 
 impl BucketRange {
-    fn clamp_min(&mut self) {
+    /// Prevent `self.min >= self.max` by clamping `self.min`.
+    pub fn clamp_min(&mut self) {
         self.min = self.min.min(self.max - 0.001);
     }
 
-    fn clamp_max(&mut self) {
+    /// Prevent `self.max <= self.min` by clamping `self.max`.
+    pub fn clamp_max(&mut self) {
         self.max = (self.min + 0.001).max(self.max);
     }
 
-    fn get_bounds(&self) -> BoundsVec {
+    pub fn get_bounds(&self) -> BoundsVec {
         assert!(self.max > self.min, "{} > {}", self.max, self.min);
         let width = (self.max - self.min) / self.n_buckets as f64;
         (0..=self.n_buckets)
@@ -123,7 +127,7 @@ impl Default for BucketRange {
 }
 
 impl BucketConfig {
-    fn get_bounds(&self) -> Option<BoundsVec> {
+    pub fn get_bounds(&self) -> Option<BoundsVec> {
         let mut new_bounds = self.range_input.get_bounds();
         if new_bounds.is_empty() {
             return None;
@@ -144,10 +148,11 @@ impl Default for BucketConfig {
     }
 }
 
+/// A plot for any [`MetricKind`], rendering with [`egui_plot`].
 pub struct MetricPlot {
-    pub name: String,
-    pub key: MetricKey,
-    pub unit: Option<Unit>,
+    name: String,
+    key: MetricKey,
+    unit: Option<Unit>,
     data: MetricPlotData,
 }
 
@@ -267,7 +272,6 @@ struct HistogramData {
     source: Arc<AtomicBucket<f64>>,
     ring: Option<Ring<f64>>,
     bucket_counts: CountsVec,
-
     config: HistogramPlotConfig,
 }
 
@@ -433,7 +437,11 @@ impl HistogramData {
 }
 
 impl MetricPlot {
-    pub(crate) fn new(
+    /// Create a new plot from the metric identified by `key`.
+    ///
+    /// The metric will be found in `registry`. If it does not exist, it will
+    /// be created.
+    pub fn new(
         registry: &MetricsRegistry,
         name: impl Into<String>,
         key: MetricKey,
@@ -473,6 +481,10 @@ impl MetricPlot {
         &self.name
     }
 
+    pub fn key(&self) -> &MetricKey {
+        &self.key
+    }
+
     pub fn clone_config(&self) -> MetricPlotConfig {
         match &self.data {
             MetricPlotData::Counter(data) => MetricPlotConfig::Counter(data.config.clone()),
@@ -481,6 +493,11 @@ impl MetricPlot {
         }
     }
 
+    /// Pull metric data from the source.
+    ///
+    /// This should run in the [`Last`](bevy::prelude::Last) schedule **before**
+    /// [`ClearBucketsSystem`](crate::ClearBucketsSystem) to ensure no data
+    /// is missed.
     pub fn update(&mut self) {
         match &mut self.data {
             MetricPlotData::Counter(data) => {
@@ -495,6 +512,7 @@ impl MetricPlot {
         }
     }
 
+    /// Draw the plot using `ui`.
     pub fn draw(&mut self, ui: &mut Ui) {
         let Self {
             name, unit, data, ..

@@ -1,10 +1,12 @@
-use crate::{registry::clear_atomic_buckets, MetricsRegistry};
+use crate::registry::{clear_atomic_buckets, MetricsRegistry};
 use bevy::prelude::*;
 use metrics::set_global_recorder;
 
 /// Installs and garbage collects a [`MetricsRegistry`].
 ///
-/// See [`ClearBucketsSystem`] to avoid system ordering issues.
+/// This plugin runs a garbage collector every frame in the
+/// [`ClearBucketsSystem`]. Direct consumers of atomic buckets (e.g. plots)
+/// should read the documentation of [`ClearBucketsSystem`].
 #[derive(Default)]
 pub struct RegistryPlugin {
     registry: Option<MetricsRegistry>,

@@ -1,3 +1,5 @@
+//! Widget for search the metrics registry.
+
 use crate::{
     dropdown_list::dropdown_list,
     registry::{MetricsRegistry, SearchResult},
@@ -6,7 +8,8 @@ use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
 use bevy_egui::egui::{TextEdit, Ui};
 use std::time::{Duration, Instant};
 
-pub struct MetricsFinder {
+/// A widget that searches the [`MetricsRegistry`] with fuzzy string matching.
+pub struct SearchBar {
     search_input: String,
     input_dirty: bool,
     last_search_time: Instant,
@@ -14,13 +17,13 @@ pub struct MetricsFinder {
     search_results: Vec<SearchResult>,
 }
 
-impl Default for MetricsFinder {
+impl Default for SearchBar {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MetricsFinder {
+impl SearchBar {
     pub fn new() -> Self {
         Self {
             search_input: Default::default(),
@@ -31,6 +34,9 @@ impl MetricsFinder {
         }
     }
 
+    /// Draw the widget and accept user input.
+    ///
+    /// If the user selects one of the search results, it will be returned.
     pub fn draw(&mut self, registry: &MetricsRegistry, ui: &mut Ui) -> Option<SearchResult> {
         // Draw search box.
         let maybe_selected = ui

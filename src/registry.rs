@@ -1,3 +1,5 @@
+//! The process-global metrics registry.
+
 use crate::metric_kind_str;
 use bevy::{
     prelude::{default, Res, Resource},
@@ -12,14 +14,19 @@ use metrics_util::{
 };
 use std::sync::{Arc, RwLock};
 
+/// Tracks all metrics in the current process.
+///
+/// You may never need to interact with this, unless you want to call
+/// [`set_global_recorder`](metrics::set_global_recorder) manually and provide a
+/// clone of that same registry to the [`RegistryPlugin`](crate::RegistryPlugin).
 #[derive(Clone, Resource)]
 pub struct MetricsRegistry {
     inner: Arc<Inner>,
 }
 
-pub(crate) struct Inner {
-    pub registry: Registry<Key, AtomicStorage>,
-    pub descriptions: RwLock<HashMap<DescriptionKey, MetricDescription>>,
+struct Inner {
+    registry: Registry<Key, AtomicStorage>,
+    descriptions: RwLock<HashMap<DescriptionKey, MetricDescription>>,
 }
 
 #[derive(Clone)]
@@ -48,7 +55,12 @@ impl MetricsRegistry {
         &self.inner.registry
     }
 
-    pub(crate) fn fuzzy_search_by_name(&self, input: &str) -> Vec<SearchResult> {
+    /// Search the registry for metrics whose name matches `input`.
+    ///
+    /// Empty `input` will match everything.
+    ///
+    /// Results are not returned in any particular order.
+    pub fn fuzzy_search_by_name(&self, input: &str) -> Vec<SearchResult> {
         let mut results = Vec::new();
         let matcher = SkimMatcherV2::default();
         let reg = self.inner_registry();
@@ -138,6 +150,8 @@ pub struct SearchResult {
 }
 
 impl SearchResult {
+    /// Text to display in the [`SearchBar`](crate::search_bar::SearchBar)'s
+    /// dropdown list.
     pub fn dropdown_description(&self) -> LayoutJob {
         let mut job = LayoutJob::default();
         job.append(
@@ -235,7 +249,7 @@ impl Recorder for MetricsRegistry {
     }
 }
 
-pub fn clear_atomic_buckets(registry: Res<MetricsRegistry>) {
+pub(crate) fn clear_atomic_buckets(registry: Res<MetricsRegistry>) {
     let registry = registry.inner_registry();
     registry.visit_histograms(|_, h| {
         h.clear();

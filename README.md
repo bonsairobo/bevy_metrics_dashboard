@@ -35,3 +35,8 @@ Steps for plotting your metrics:
 
 [egui_plugin]: bevy_egui::EguiPlugin
 
+# Low-Level API
+
+You can build your own metrics dashboard widgets by reusing building blocks like
+the search bar and plot widgets. Read the source code of [`DashboardWindow`] to
+see how it works.

@@ -1,7 +1,7 @@
 use crate::{
-    finder::MetricsFinder,
     plots::{MetricPlot, MetricPlotConfig},
     registry::{MetricKey, MetricsRegistry},
+    search_bar::SearchBar,
 };
 use bevy::{prelude::*, utils::HashMap};
 use bevy_egui::{
@@ -9,13 +9,15 @@ use bevy_egui::{
     EguiContexts,
 };
 
+/// Cache of configs for plots that have been opened and removed.
 #[derive(Default, Deref, DerefMut, Resource)]
 pub struct CachedPlotConfigs(HashMap<MetricKey, MetricPlotConfig>);
 
+/// An `egui` window that can search for metrics and plot them.
 #[derive(Component)]
 pub struct DashboardWindow {
     title: String,
-    finder: MetricsFinder,
+    finder: SearchBar,
     plots: Vec<MetricPlot>,
 }
 
@@ -58,7 +60,7 @@ impl DashboardWindow {
                         let n_duplicates = window
                             .plots
                             .iter()
-                            .filter(|p| p.key == selected.key)
+                            .filter(|p| p.key() == &selected.key)
                             .count();
 
                         let plot_config = cached_configs
@@ -100,7 +102,7 @@ impl DashboardWindow {
 
         for i in remove_plots {
             let plot = self.plots.remove(i);
-            cached_configs.insert(plot.key.clone(), plot.clone_config());
+            cached_configs.insert(plot.key().clone(), plot.clone_config());
         }
     }
 }
