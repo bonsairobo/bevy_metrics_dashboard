@@ -41,36 +41,45 @@ impl DashboardWindow {
     }
 
     pub fn draw_all(
+        mut commands: Commands,
         registry: Res<MetricsRegistry>,
         mut cached_configs: ResMut<CachedPlotConfigs>,
         mut ctxts: EguiContexts,
-        mut windows: Query<&mut DashboardWindow>,
+        mut windows: Query<(Entity, &mut DashboardWindow)>,
     ) {
         let ctxt = ctxts.ctx_mut();
-        for mut window in &mut windows {
-            egui::Window::new(&window.title).show(ctxt, |ui| {
-                if let Some(selected) = window.finder.draw(&registry, ui) {
-                    // If we already have this metric, give it a unique name.
-                    let n_duplicates = window
-                        .plots
-                        .iter()
-                        .filter(|p| p.key == selected.key)
-                        .count();
+        for (entity, mut window) in &mut windows {
+            let mut open = true;
+            egui::Window::new(&window.title)
+                .open(&mut open)
+                .show(ctxt, |ui| {
+                    if let Some(selected) = window.finder.draw(&registry, ui) {
+                        // If we already have this metric, give it a unique name.
+                        let n_duplicates = window
+                            .plots
+                            .iter()
+                            .filter(|p| p.key == selected.key)
+                            .count();
 
-                    let plot_config = cached_configs
-                        .get(&selected.key)
-                        .cloned()
-                        .unwrap_or_else(|| MetricPlotConfig::default_for_kind(selected.key.kind));
-                    window.plots.push(MetricPlot::new(
-                        &registry,
-                        selected.key.default_title(n_duplicates),
-                        selected.key,
-                        selected.description.and_then(|d| d.unit),
-                        plot_config,
-                    ));
-                }
-                window.draw_plots(&mut cached_configs, ui);
-            });
+                        let plot_config = cached_configs
+                            .get(&selected.key)
+                            .cloned()
+                            .unwrap_or_else(|| {
+                                MetricPlotConfig::default_for_kind(selected.key.kind)
+                            });
+                        window.plots.push(MetricPlot::new(
+                            &registry,
+                            selected.key.default_title(n_duplicates),
+                            selected.key,
+                            selected.description.and_then(|d| d.unit),
+                            plot_config,
+                        ));
+                    }
+                    window.draw_plots(&mut cached_configs, ui);
+                });
+            if !open {
+                commands.entity(entity).despawn();
+            }
         }
     }
 

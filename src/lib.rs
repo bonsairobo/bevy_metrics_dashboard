@@ -18,7 +18,6 @@ pub use metrics_util;
 
 // TODO:
 // - low-level API for integrating finder + plots into a custom UI
-// - closing dashboard windows
 // - automatic significant figures
 // - automatically determine histogram bucket bounds
 // - search by label and description
