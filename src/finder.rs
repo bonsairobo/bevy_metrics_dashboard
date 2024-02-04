@@ -24,7 +24,7 @@ impl MetricsFinder {
     pub fn new() -> Self {
         Self {
             search_input: Default::default(),
-            input_dirty: false,
+            input_dirty: true,
             last_search_time: Instant::now(),
             search_task: Default::default(),
             search_results: Default::default(),
