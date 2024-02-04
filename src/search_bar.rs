@@ -22,7 +22,7 @@ where
     let mut return_val = None;
     popup_below_widget(ui, popup_id, &drop_from_widget, |ui| {
         let select_first = ui.input(|i| i.key_pressed(Key::Enter));
-        ScrollArea::vertical().show(ui, |ui| {
+        ScrollArea::vertical().max_height(200.0).show(ui, |ui| {
             let mut first = true;
             for item in items {
                 let text = get_text(&item);
