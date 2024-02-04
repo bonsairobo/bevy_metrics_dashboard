@@ -31,7 +31,7 @@ impl<T: Clone + Default> Ring<T> {
     }
 
     pub fn latest(&self) -> Option<&T> {
-        self.elements.back()
+        self.elements.front()
     }
 
     /// Overwrites the oldest element if capacity limit is reached.

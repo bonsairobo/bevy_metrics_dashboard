@@ -65,11 +65,17 @@ pub struct HistogramPlotConfig {
 
 impl Default for HistogramPlotConfig {
     fn default() -> Self {
+        // Just initial values. These are configurable in the UI.
+        let bucket_bounds: SmallVec<[f64; 16]> = (10..20).map(|i| i as f64).collect();
+        let mut bucket_bounds_input = String::new();
+        for bound in bucket_bounds.iter() {
+            bucket_bounds_input.push_str(&bound.to_string());
+            bucket_bounds_input.push(' ');
+        }
         Self {
             window_size: Some(500),
-            // Just initial values. These are configurable in the UI.
-            bucket_bounds: smallvec![-10.0, 0.0, 10.0],
-            bucket_bounds_input: default(),
+            bucket_bounds,
+            bucket_bounds_input,
         }
     }
 }
