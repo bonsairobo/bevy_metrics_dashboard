@@ -419,10 +419,6 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
 
     match data {
         MetricPlotData::Counter(data) => {
-            ui.collapsing("Settings", |ui| {
-                data.configure_ui(ui);
-            });
-
             if let Some(latest) = data.ring.latest() {
                 ui.label(format!("latest = {latest:.3}"));
             }
@@ -433,12 +429,12 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
                 plot = plot.y_axis_label(unit_axis_label(unit));
             }
             plot.show(ui, |plot_ui| plot_ui.line(line));
+
+            ui.collapsing("Settings", |ui| {
+                data.configure_ui(ui);
+            });
         }
         MetricPlotData::Gauge(data) => {
-            ui.collapsing("Settings", |ui| {
-                data.configure_ui(ui);
-            });
-
             if let Some(latest) = data.ring.latest() {
                 ui.label(format!("latest = {latest:.3}"));
             }
@@ -449,18 +445,22 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
                 plot = plot.y_axis_label(unit_axis_label(unit));
             }
             plot.show(ui, |plot_ui| plot_ui.line(line));
-        }
-        MetricPlotData::Histogram(data) => {
+
             ui.collapsing("Settings", |ui| {
                 data.configure_ui(ui);
             });
-
+        }
+        MetricPlotData::Histogram(data) => {
             let chart = data.make_bar_chart();
             let mut plot = new_plot().y_axis_label("count");
             if let Some(unit) = unit {
                 plot = plot.x_axis_label(unit_axis_label(unit));
             }
             plot.show(ui, |plot_ui| plot_ui.bar_chart(chart));
+
+            ui.collapsing("Settings", |ui| {
+                data.configure_ui(ui);
+            });
         }
     }
 }
