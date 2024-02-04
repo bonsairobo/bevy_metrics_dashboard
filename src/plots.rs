@@ -215,14 +215,15 @@ impl GaugeData {
     }
 
     fn configure_ui(&mut self, ui: &mut Ui) {
-        ui.add(Slider::new(&mut self.config.smoothing_weight, 0.0..=1.0).text("Smoothing Weight"));
-        self.smoother.weight = self.config.smoothing_weight;
         if ui
             .add(Slider::new(&mut self.config.window_size, 100..=1000).text("Window Size"))
             .changed()
         {
             self.ring.set_max_len(self.config.window_size);
         }
+
+        ui.add(Slider::new(&mut self.config.smoothing_weight, 0.0..=1.0).text("Smoothing Weight"));
+        self.smoother.weight = self.config.smoothing_weight;
     }
 
     fn make_line(&self) -> Line {
