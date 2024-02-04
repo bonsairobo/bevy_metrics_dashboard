@@ -15,6 +15,8 @@ use std::sync::{atomic::Ordering, Arc};
 // BUG: If you have a constant metric, it results in a perfectly horizontal line
 // plot. Such a plot seems invisible because the axes auto-fit with a height
 // of zero.
+//
+// https://github.com/emilk/egui/issues/3970
 
 const WINDOW_RANGE: [usize; 2] = [100, 5000];
 
