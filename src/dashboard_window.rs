@@ -28,19 +28,19 @@ impl DashboardWindow {
         }
     }
 
-    pub fn update_all(mut windows: Query<&mut DashboardWindow>) {
+    pub(crate) fn update_all(mut windows: Query<&mut DashboardWindow>) {
         for mut window in &mut windows {
             window.update();
         }
     }
 
-    pub fn update(&mut self) {
+    pub(crate) fn update(&mut self) {
         for plot in &mut self.plots {
             plot.update();
         }
     }
 
-    pub fn draw_all(
+    pub(crate) fn draw_all(
         mut commands: Commands,
         registry: Res<MetricsRegistry>,
         mut cached_configs: ResMut<CachedPlotConfigs>,
@@ -83,7 +83,7 @@ impl DashboardWindow {
         }
     }
 
-    pub fn draw_plots(&mut self, cached_configs: &mut CachedPlotConfigs, ui: &mut Ui) {
+    pub(crate) fn draw_plots(&mut self, cached_configs: &mut CachedPlotConfigs, ui: &mut Ui) {
         let mut remove_plots = Vec::new();
 
         egui::ScrollArea::vertical().show(ui, |ui| {

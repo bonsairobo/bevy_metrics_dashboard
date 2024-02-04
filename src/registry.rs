@@ -44,11 +44,11 @@ impl MetricsRegistry {
         }
     }
 
-    pub fn inner_registry(&self) -> &Registry<Key, AtomicStorage> {
+    pub(crate) fn inner_registry(&self) -> &Registry<Key, AtomicStorage> {
         &self.inner.registry
     }
 
-    pub fn fuzzy_search_by_name(&self, input: &str) -> Vec<SearchResult> {
+    pub(crate) fn fuzzy_search_by_name(&self, input: &str) -> Vec<SearchResult> {
         let mut results = Vec::new();
         let matcher = SkimMatcherV2::default();
         let reg = self.inner_registry();
