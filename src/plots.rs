@@ -371,6 +371,10 @@ impl MetricPlot {
         }
     }
 
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
     pub fn clone_config(&self) -> MetricPlotConfig {
         match &self.data {
             MetricPlotData::Counter(data) => MetricPlotConfig::Counter(data.config.clone()),
@@ -393,21 +397,12 @@ impl MetricPlot {
         }
     }
 
-    pub fn draw(&mut self, ui: &mut Ui) -> Option<PlotAction> {
-        let mut action = None;
-
+    pub fn draw(&mut self, ui: &mut Ui) {
         let Self {
             name, unit, data, ..
         } = self;
 
-        ui.collapsing(&*name, |ui| {
-            if ui.button("Remove").clicked() {
-                action = Some(PlotAction::Remove);
-            }
-            draw_plot(name, *unit, data, ui);
-        });
-
-        action
+        draw_plot(name, *unit, data, ui);
     }
 }
 
@@ -468,10 +463,6 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
             plot.show(ui, |plot_ui| plot_ui.bar_chart(chart));
         }
     }
-}
-
-pub enum PlotAction {
-    Remove,
 }
 
 fn unit_axis_label(unit: Unit) -> &'static str {

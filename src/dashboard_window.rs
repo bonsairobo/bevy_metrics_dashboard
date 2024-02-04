@@ -1,6 +1,6 @@
 use crate::{
     finder::MetricsFinder,
-    plots::{MetricPlot, MetricPlotConfig, PlotAction},
+    plots::{MetricPlot, MetricPlotConfig},
     registry::{MetricKey, MetricsRegistry},
 };
 use bevy::{prelude::*, utils::HashMap};
@@ -79,15 +79,13 @@ impl DashboardWindow {
 
         egui::ScrollArea::vertical().show(ui, |ui| {
             for (i, plot) in self.plots.iter_mut().enumerate().rev() {
-                let action = plot.draw(ui);
-
-                #[allow(clippy::single_match)]
-                match action {
-                    Some(PlotAction::Remove) => {
+                // TODO: avoid string copy here?
+                ui.collapsing(plot.name().to_owned(), |ui| {
+                    if ui.button("Remove").clicked() {
                         remove_plots.push(i);
                     }
-                    None => (),
-                }
+                    plot.draw(ui);
+                });
             }
         });
 
