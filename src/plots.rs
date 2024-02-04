@@ -89,13 +89,16 @@ struct BucketRange {
 }
 
 impl BucketRange {
-    fn clamp(&mut self) {
-        self.min = self.min.min(self.max - f64::EPSILON);
-        self.max = (self.min + f64::EPSILON).max(self.max);
+    fn clamp_min(&mut self) {
+        self.min = self.min.min(self.max - 0.001);
+    }
+
+    fn clamp_max(&mut self) {
+        self.max = (self.min + 0.001).max(self.max);
     }
 
     fn get_bounds(&self) -> BoundsVec {
-        assert!(self.max > self.min);
+        assert!(self.max > self.min, "{} > {}", self.max, self.min);
         let width = (self.max - self.min) / self.n_buckets as f64;
         (0..=self.n_buckets)
             .map(|i| self.min + i as f64 * width)
@@ -272,6 +275,7 @@ impl HistogramData {
                         .speed(0.1),
                 )
                 .changed();
+            self.config.buckets.range_input.clamp_max();
             update |= ui
                 .add(
                     DragValue::new(&mut self.config.buckets.range_input.max)
@@ -279,9 +283,9 @@ impl HistogramData {
                         .speed(0.1),
                 )
                 .changed();
+            self.config.buckets.range_input.clamp_min();
         });
         if update {
-            self.config.buckets.range_input.clamp();
             self.update_bounds_from_input();
         }
 
