@@ -4,7 +4,7 @@ use metrics::set_global_recorder;
 
 /// Installs and garbage collects a [`MetricsRegistry`].
 ///
-/// See [`ClearBucketsSet`] to avoid system ordering issues.
+/// See [`ClearBucketsSystem`] to avoid system ordering issues.
 #[derive(Default)]
 pub struct RegistryPlugin {
     registry: Option<MetricsRegistry>,

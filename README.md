@@ -14,18 +14,6 @@ plot high-resolution metrics in real time within the app that defines them. As
 such, this tool shines when you are debugging an issue that is reproducible and
 requires real-time feedback or ad-hoc instrumentation.
 
-# Getting Started
-
-See the "examples" directory.
-
-Steps for plotting your metrics:
-
-  1. Define metrics using the [`metrics`] crate.
-  1. Add the [`EguiPlugin`][egui_plugin] and [`DashboardPlugin`] to your app.
-  1. Spawn an entity with the [`DashboardWindow`] component.
-
-[egui_plugin]: bevy_egui::EguiPlugin
-
 # How does it work?
 
 The `metrics` crate lets developers define metrics in their code using simple
@@ -34,3 +22,16 @@ metrics that have been used or described in code.
 
 The provided Bevy plugin defines and installs a registry, and the dashboard
 widget lets users search the registry and plot metrics.
+
+# Getting Started
+
+See the "examples" directory.
+
+Steps for plotting your metrics:
+
+  1. Define metrics using the [`metrics`] crate.
+  1. Add the [`EguiPlugin`][egui_plugin], [`RegistryPlugin`], and [`DashboardPlugin`] to your app.
+  1. Spawn an entity with the [`DashboardWindow`] component.
+
+[egui_plugin]: bevy_egui::EguiPlugin
+
