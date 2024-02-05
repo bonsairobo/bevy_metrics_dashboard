@@ -19,7 +19,7 @@ pub use dashboard_window::{CachedPlotConfigs, DashboardWindow};
 pub use registry_plugin::{ClearBucketsSystem, RegistryPlugin};
 
 #[cfg(feature = "render_metrics")]
-pub use render_metrics_plugin::{RenderMetricsPlugin, RenderMetricsSettings};
+pub use render_metrics_plugin::RenderMetricsPlugin;
 
 pub use bevy_egui;
 pub use metrics;
