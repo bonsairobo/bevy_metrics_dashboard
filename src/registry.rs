@@ -10,8 +10,9 @@ use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use metrics::{Counter, Gauge, Histogram, Key, KeyName, Metadata, Recorder, SharedString, Unit};
 use metrics_util::{
     registry::{AtomicStorage, Registry},
-    MetricKind,
+    AtomicBucket, MetricKind,
 };
+use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, RwLock};
 
 /// Tracks all metrics in the current process.
@@ -51,8 +52,17 @@ impl MetricsRegistry {
         }
     }
 
-    pub(crate) fn inner_registry(&self) -> &Registry<Key, AtomicStorage> {
-        &self.inner.registry
+    pub fn get_or_create_counter(&self, key: &Key) -> Arc<AtomicU64> {
+        self.inner.registry.get_or_create_counter(key, Arc::clone)
+    }
+    pub fn get_or_create_gauge(&self, key: &Key) -> Arc<AtomicU64> {
+        self.inner.registry.get_or_create_gauge(key, Arc::clone)
+    }
+    pub fn get_or_create_histogram(&self, key: &Key) -> Arc<AtomicBucket<f64>> {
+        self.inner.registry.get_or_create_histogram(key, Arc::clone)
+    }
+    pub fn get_description(&self, key: &DescriptionKey) -> Option<MetricDescription> {
+        self.inner.descriptions.read().unwrap().get(key).cloned()
     }
 
     /// Search the registry for metrics whose name matches `input`.
@@ -63,7 +73,7 @@ impl MetricsRegistry {
     pub fn fuzzy_search_by_name(&self, input: &str) -> Vec<SearchResult> {
         let mut results = Vec::new();
         let matcher = SkimMatcherV2::default();
-        let reg = self.inner_registry();
+        let reg = &self.inner.registry;
         let descriptions = self.inner.descriptions.read().unwrap();
         reg.visit_counters(|key, _| {
             if matcher.fuzzy_match(key.name(), input).is_some() {
@@ -250,8 +260,7 @@ impl Recorder for MetricsRegistry {
 }
 
 pub(crate) fn clear_atomic_buckets(registry: Res<MetricsRegistry>) {
-    let registry = registry.inner_registry();
-    registry.visit_histograms(|_, h| {
+    registry.inner.registry.visit_histograms(|_, h| {
         h.clear();
     });
 }

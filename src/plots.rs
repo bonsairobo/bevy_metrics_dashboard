@@ -452,21 +452,15 @@ impl MetricPlot {
     ) -> Self {
         let data = match config {
             MetricPlotConfig::Counter(config) => {
-                let source = registry
-                    .inner_registry()
-                    .get_or_create_counter(&key.key, Arc::clone);
+                let source = registry.get_or_create_counter(&key.key);
                 MetricPlotData::Counter(CounterData::new(config, source))
             }
             MetricPlotConfig::Gauge(config) => {
-                let source = registry
-                    .inner_registry()
-                    .get_or_create_gauge(&key.key, Arc::clone);
+                let source = registry.get_or_create_gauge(&key.key);
                 MetricPlotData::Gauge(GaugeData::new(config, source))
             }
             MetricPlotConfig::Histogram(bar_config) => {
-                let source = registry
-                    .inner_registry()
-                    .get_or_create_histogram(&key.key, Arc::clone);
+                let source = registry.get_or_create_histogram(&key.key);
                 MetricPlotData::Histogram(HistogramData::new(bar_config, source))
             }
         };
