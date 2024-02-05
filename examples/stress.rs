@@ -7,15 +7,13 @@ use bevy_metrics_dashboard::{
 };
 use rand::Rng;
 
-const CAMERA_SPEED: f32 = 100.0;
-
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
         .add_plugins(RegistryPlugin::default())
         .add_plugins(CoreMetricsPlugin)
-        .add_plugins(RenderMetricsPlugin::default())
+        .add_plugins(RenderMetricsPlugin)
         .add_plugins(DashboardPlugin)
         .add_systems(Startup, (create_dashboard, setup))
         .add_systems(Update, move_camera)
@@ -67,10 +65,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     commands.spawn_batch(sprites);
 }
 
-// System for rotating and translating the camera
 fn move_camera(time: Res<Time>, mut camera_query: Query<&mut Transform, With<Camera>>) {
     let mut camera_transform = camera_query.single_mut();
-    camera_transform.rotate_z(time.delta_seconds() * 0.5);
-    *camera_transform = *camera_transform
-        * Transform::from_translation(Vec3::X * CAMERA_SPEED * time.delta_seconds());
+    camera_transform.rotate_z(time.delta_seconds() * 0.1);
 }

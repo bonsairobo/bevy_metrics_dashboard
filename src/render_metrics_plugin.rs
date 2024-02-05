@@ -2,7 +2,6 @@ use bevy::{prelude::*, render::view::VisibleEntities};
 use metrics::{describe_gauge, gauge, Unit};
 
 /// Provides rendering metrics like visible entities, etc.
-#[derive(Default)]
 pub struct RenderMetricsPlugin;
 
 impl Plugin for RenderMetricsPlugin {
