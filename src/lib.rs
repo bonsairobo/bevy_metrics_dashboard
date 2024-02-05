@@ -26,6 +26,7 @@ pub use metrics;
 pub use metrics_util;
 
 // TODO:
+// - don't assume there is a single egui context
 // - add metadata section to plot that includes description and labels
 // - basic math functions? (e.g. derivative)
 // - automatic significant figures
