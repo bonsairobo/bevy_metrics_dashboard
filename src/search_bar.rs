@@ -4,7 +4,7 @@ use crate::{
     dropdown_list::dropdown_list,
     registry::{MetricsRegistry, SearchResult},
 };
-use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
+use bevy::tasks::{AsyncComputeTaskPool, Task};
 use bevy_egui::egui::{TextEdit, Ui};
 use std::time::{Duration, Instant};
 
@@ -63,7 +63,7 @@ impl SearchBar {
         // Check if we have new search results.
         if let Some(task) = self.search_task.take() {
             if task.is_finished() {
-                self.search_results = block_on(task);
+                self.search_results = futures::executor::block_on(task);
             } else {
                 self.search_task = Some(task);
             }
