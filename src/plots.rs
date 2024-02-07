@@ -3,8 +3,8 @@
 use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
 use bevy::prelude::default;
+use bevy_egui::egui::widgets::plot::{Bar, BarChart, Line, Plot, PlotPoints};
 use bevy_egui::egui::{Color32, DragValue, Slider, Ui};
-use egui_plot::{Bar, BarChart, Line, Plot, PlotPoints};
 use float_ord::FloatOrd;
 use metrics::atomics::AtomicU64;
 use metrics::Unit;
@@ -536,10 +536,7 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
             }
 
             let line = data.make_line();
-            let mut plot = new_plot().x_axis_label("frame");
-            if let Some(unit) = unit {
-                plot = plot.y_axis_label(unit_axis_label(unit));
-            }
+            let mut plot = new_plot();
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
             ui.collapsing("Settings", |ui| {
@@ -552,10 +549,7 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
             }
 
             let line = data.make_line();
-            let mut plot = new_plot().x_axis_label("frame");
-            if let Some(unit) = unit {
-                plot = plot.y_axis_label(unit_axis_label(unit));
-            }
+            let mut plot = new_plot();
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
             ui.collapsing("Settings", |ui| {
@@ -564,38 +558,13 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
         }
         MetricPlotData::Histogram(data) => {
             let chart = data.make_bar_chart();
-            let mut plot = new_plot().y_axis_label("count");
-            if let Some(unit) = unit {
-                plot = plot.x_axis_label(unit_axis_label(unit));
-            }
+            let mut plot = new_plot();
             plot.show(ui, |plot_ui| plot_ui.bar_chart(chart));
 
             ui.collapsing("Settings", |ui| {
                 data.configure_ui(ui);
             });
         }
-    }
-}
-
-fn unit_axis_label(unit: Unit) -> &'static str {
-    match unit {
-        Unit::Count => "count",
-        Unit::Percent => "%",
-        Unit::Seconds => "s",
-        Unit::Milliseconds => "ms",
-        Unit::Microseconds => "μs",
-        Unit::Nanoseconds => "ns",
-        Unit::Tebibytes => "TiB",
-        Unit::Gigibytes => "GiB",
-        Unit::Mebibytes => "MiB",
-        Unit::Kibibytes => "KiB",
-        Unit::Bytes => "B",
-        Unit::TerabitsPerSecond => "Tb/s",
-        Unit::GigabitsPerSecond => "Gb/s",
-        Unit::MegabitsPerSecond => "Mb/s",
-        Unit::KilobitsPerSecond => "Kb/s",
-        Unit::BitsPerSecond => "b/s",
-        Unit::CountPerSecond => "hz",
     }
 }
 

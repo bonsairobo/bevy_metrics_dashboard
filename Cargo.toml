@@ -22,8 +22,7 @@ opt-level = 2
 render_metrics = ["bevy/bevy_core_pipeline"]
 
 [dependencies]
-bevy_egui = "0.22"
-egui_plot = "0.23"
+bevy_egui = "0.21"
 float-ord = "0.3.2"
 futures = "0.3.30"
 fuzzy-matcher = "0.3.7"
