@@ -26,7 +26,6 @@ pub use metrics;
 pub use metrics_util;
 
 // TODO:
-// - per-window plot settings (e.g. window size)
 // - don't assume there is a single egui context
 // - add metadata section to plot that includes description and labels
 // - automatic significant figures

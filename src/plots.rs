@@ -1,5 +1,6 @@
 //! Widgets for plotting metrics.
 
+use crate::dashboard_window::DashboardConfig;
 use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
 use bevy::prelude::default;
@@ -17,8 +18,6 @@ use std::sync::{atomic::Ordering, Arc};
 // of zero.
 //
 // https://github.com/emilk/egui/issues/3970
-
-const WINDOW_RANGE: [usize; 2] = [100, 5000];
 
 #[derive(Clone)]
 pub enum MetricPlotConfig {
@@ -187,20 +186,15 @@ impl CounterData {
         }
     }
 
-    fn configure_ui(&mut self, ui: &mut Ui) {
+    fn configure_ui(&mut self, dash_config: &DashboardConfig, ui: &mut Ui) {
         ui.checkbox(&mut self.config.derivative, "Derivative");
-        if ui
-            .add(
-                Slider::new(
-                    &mut self.config.window_size,
-                    WINDOW_RANGE[0]..=WINDOW_RANGE[1],
-                )
-                .text("Window Size"),
-            )
-            .changed()
-        {
-            self.ring.set_max_len(self.config.window_size);
-        }
+
+        configure_window_size(
+            &mut self.ring,
+            dash_config.global_window_size,
+            &mut self.config.window_size,
+            ui,
+        );
     }
 
     fn update(&mut self) {
@@ -231,20 +225,15 @@ impl GaugeData {
         }
     }
 
-    fn configure_ui(&mut self, ui: &mut Ui) {
+    fn configure_ui(&mut self, dash_config: &DashboardConfig, ui: &mut Ui) {
         ui.checkbox(&mut self.config.derivative, "Derivative");
-        if ui
-            .add(
-                Slider::new(
-                    &mut self.config.window_size,
-                    WINDOW_RANGE[0]..=WINDOW_RANGE[1],
-                )
-                .text("Window Size"),
-            )
-            .changed()
-        {
-            self.ring.set_max_len(self.config.window_size);
-        }
+
+        configure_window_size(
+            &mut self.ring,
+            dash_config.global_window_size,
+            &mut self.config.window_size,
+            ui,
+        );
 
         ui.add(Slider::new(&mut self.config.smoothing_weight, 0.0..=1.0).text("Smoothing Weight"));
         self.smoother.weight = self.config.smoothing_weight;
@@ -321,12 +310,7 @@ impl HistogramData {
         }
         if use_sliding_window {
             let window_size = self.config.window_size.get_or_insert(500);
-            if ui
-                .add(
-                    Slider::new(window_size, WINDOW_RANGE[0]..=WINDOW_RANGE[1]).text("Window Size"),
-                )
-                .changed()
-            {
+            if ui.add(window_size_slider(window_size)).changed() {
                 self.ring = Some(Ring::new(*window_size));
             }
         }
@@ -496,12 +480,12 @@ impl MetricPlot {
     }
 
     /// Draw the plot using `ui`.
-    pub fn draw(&mut self, ui: &mut Ui) {
+    pub fn draw(&mut self, dash_config: &DashboardConfig, ui: &mut Ui) {
         let Self {
             name, unit, data, ..
         } = self;
 
-        draw_plot(name, *unit, data, ui);
+        draw_plot(dash_config, name, *unit, data, ui);
     }
 }
 
@@ -513,7 +497,13 @@ fn add_value_to_bucket(bucket_bounds: &[f64], value: f64, bucket_counts: &mut [u
     bucket_counts[bucket_i] += 1;
 }
 
-fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut Ui) {
+fn draw_plot(
+    dash_config: &DashboardConfig,
+    name: &str,
+    unit: Option<Unit>,
+    data: &mut MetricPlotData,
+    ui: &mut Ui,
+) {
     let new_plot = || {
         Plot::new(name)
             .allow_scroll(false)
@@ -540,7 +530,7 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
             ui.collapsing("Settings", |ui| {
-                data.configure_ui(ui);
+                data.configure_ui(dash_config, ui);
             });
         }
         MetricPlotData::Gauge(data) => {
@@ -560,7 +550,7 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
             ui.collapsing("Settings", |ui| {
-                data.configure_ui(ui);
+                data.configure_ui(dash_config, ui);
             });
         }
         MetricPlotData::Histogram(data) => {
@@ -575,6 +565,24 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
                 data.configure_ui(ui);
             });
         }
+    }
+}
+
+pub(crate) fn window_size_slider(size: &mut usize) -> Slider {
+    Slider::new(size, 100..=5000).text("Window Size")
+}
+
+fn configure_window_size<T: Clone + Default>(
+    ring: &mut Ring<T>,
+    global_window_size: Option<usize>,
+    local_window_size: &mut usize,
+    ui: &mut Ui,
+) {
+    if let Some(window_size) = global_window_size {
+        *local_window_size = window_size;
+        ring.set_max_len(window_size);
+    } else if ui.add(window_size_slider(local_window_size)).changed() {
+        ring.set_max_len(*local_window_size);
     }
 }
 

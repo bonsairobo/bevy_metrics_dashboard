@@ -1,5 +1,5 @@
 use crate::{
-    plots::{MetricPlot, MetricPlotConfig},
+    plots::{window_size_slider, MetricPlot, MetricPlotConfig},
     registry::{MetricKey, MetricsRegistry},
     search_bar::SearchBar,
 };
@@ -19,6 +19,12 @@ pub struct DashboardWindow {
     title: String,
     finder: SearchBar,
     plots: Vec<MetricPlot>,
+    config: DashboardConfig,
+}
+
+#[derive(Default)]
+pub struct DashboardConfig {
+    pub global_window_size: Option<usize>,
 }
 
 impl DashboardWindow {
@@ -27,6 +33,7 @@ impl DashboardWindow {
             title: title.into(),
             finder: default(),
             plots: default(),
+            config: default(),
         }
     }
 
@@ -55,33 +62,55 @@ impl DashboardWindow {
             egui::Window::new(&window.title)
                 .open(&mut open)
                 .show(ctxt, |ui| {
-                    if let Some(selected) = window.finder.draw(&registry, ui) {
-                        // If we already have this metric, give it a unique name.
-                        let n_duplicates = window
-                            .plots
-                            .iter()
-                            .filter(|p| p.key() == &selected.key)
-                            .count();
-
-                        let plot_config = cached_configs
-                            .get(&selected.key)
-                            .cloned()
-                            .unwrap_or_else(|| {
-                                MetricPlotConfig::default_for_kind(selected.key.kind)
-                            });
-                        window.plots.push(MetricPlot::new(
-                            &registry,
-                            selected.key.default_title(n_duplicates),
-                            selected.key,
-                            selected.description.and_then(|d| d.unit),
-                            plot_config,
-                        ));
-                    }
+                    window.add_search_results(&registry, &cached_configs, ui);
+                    window.configure_ui(ui);
+                    ui.separator();
                     window.draw_plots(&mut cached_configs, ui);
                 });
             if !open {
                 commands.entity(entity).despawn();
             }
+        }
+    }
+
+    pub(crate) fn add_search_results(
+        &mut self,
+        registry: &MetricsRegistry,
+        cached_configs: &CachedPlotConfigs,
+        ui: &mut Ui,
+    ) {
+        let Some(selected) = self.finder.draw(registry, ui) else {
+            return;
+        };
+
+        // If we already have this metric, give it a unique name.
+        let n_duplicates = self
+            .plots
+            .iter()
+            .filter(|p| p.key() == &selected.key)
+            .count();
+
+        let plot_config = cached_configs
+            .get(&selected.key)
+            .cloned()
+            .unwrap_or_else(|| MetricPlotConfig::default_for_kind(selected.key.kind));
+        self.plots.push(MetricPlot::new(
+            registry,
+            selected.key.default_title(n_duplicates),
+            selected.key,
+            selected.description.and_then(|d| d.unit),
+            plot_config,
+        ));
+    }
+
+    pub(crate) fn configure_ui(&mut self, ui: &mut Ui) {
+        let mut lock_window_size = self.config.global_window_size.is_some();
+        ui.checkbox(&mut lock_window_size, "Link X Axes");
+        if lock_window_size {
+            let window_size = self.config.global_window_size.get_or_insert(500);
+            ui.add(window_size_slider(window_size));
+        } else {
+            self.config.global_window_size = None;
         }
     }
 
@@ -95,7 +124,8 @@ impl DashboardWindow {
                     if ui.button("Remove").clicked() {
                         remove_plots.push(i);
                     }
-                    plot.draw(ui);
+
+                    plot.draw(&self.config, ui);
                 });
             }
         });
