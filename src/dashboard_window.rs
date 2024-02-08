@@ -63,7 +63,9 @@ impl DashboardWindow {
                 .open(&mut open)
                 .show(ctxt, |ui| {
                     window.add_search_results(&registry, &cached_configs, ui);
-                    window.configure_ui(ui);
+                    ui.collapsing("Global Settings", |ui| {
+                        window.configure_ui(ui);
+                    });
                     ui.separator();
                     window.draw_plots(&mut cached_configs, ui);
                 });
