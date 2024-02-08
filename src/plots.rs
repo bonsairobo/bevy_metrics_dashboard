@@ -186,15 +186,23 @@ impl CounterData {
         }
     }
 
-    fn configure_ui(&mut self, dash_config: &DashboardConfig, ui: &mut Ui) {
+    fn handle_global_config(&mut self, dash_config: &DashboardConfig) {
+        if let Some(window_size) = dash_config.global_window_size {
+            self.config.window_size = window_size;
+            self.ring.set_max_len(self.config.window_size);
+        }
+    }
+
+    fn configure_ui(&mut self, enable_window_size: bool, ui: &mut Ui) {
         ui.checkbox(&mut self.config.derivative, "Derivative");
 
-        configure_window_size(
-            &mut self.ring,
-            dash_config.global_window_size,
-            &mut self.config.window_size,
-            ui,
-        );
+        if enable_window_size
+            && ui
+                .add(window_size_slider(&mut self.config.window_size))
+                .changed()
+        {
+            self.ring.set_max_len(self.config.window_size);
+        }
     }
 
     fn update(&mut self) {
@@ -225,15 +233,23 @@ impl GaugeData {
         }
     }
 
-    fn configure_ui(&mut self, dash_config: &DashboardConfig, ui: &mut Ui) {
+    fn handle_global_config(&mut self, dash_config: &DashboardConfig) {
+        if let Some(window_size) = dash_config.global_window_size {
+            self.config.window_size = window_size;
+            self.ring.set_max_len(self.config.window_size);
+        }
+    }
+
+    fn configure_ui(&mut self, enable_window_size: bool, ui: &mut Ui) {
         ui.checkbox(&mut self.config.derivative, "Derivative");
 
-        configure_window_size(
-            &mut self.ring,
-            dash_config.global_window_size,
-            &mut self.config.window_size,
-            ui,
-        );
+        if enable_window_size
+            && ui
+                .add(window_size_slider(&mut self.config.window_size))
+                .changed()
+        {
+            self.ring.set_max_len(self.config.window_size);
+        }
 
         ui.add(Slider::new(&mut self.config.smoothing_weight, 0.0..=1.0).text("Smoothing Weight"));
         self.smoother.weight = self.config.smoothing_weight;
@@ -529,8 +545,9 @@ fn draw_plot(
             }
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
+            data.handle_global_config(dash_config);
             ui.collapsing("Settings", |ui| {
-                data.configure_ui(dash_config, ui);
+                data.configure_ui(dash_config.global_window_size.is_none(), ui);
             });
         }
         MetricPlotData::Gauge(data) => {
@@ -549,8 +566,9 @@ fn draw_plot(
             }
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
+            data.handle_global_config(dash_config);
             ui.collapsing("Settings", |ui| {
-                data.configure_ui(dash_config, ui);
+                data.configure_ui(dash_config.global_window_size.is_none(), ui);
             });
         }
         MetricPlotData::Histogram(data) => {
@@ -570,20 +588,6 @@ fn draw_plot(
 
 pub(crate) fn window_size_slider(size: &mut usize) -> Slider {
     Slider::new(size, 100..=5000).text("Window Size")
-}
-
-fn configure_window_size<T: Clone + Default>(
-    ring: &mut Ring<T>,
-    global_window_size: Option<usize>,
-    local_window_size: &mut usize,
-    ui: &mut Ui,
-) {
-    if let Some(window_size) = global_window_size {
-        *local_window_size = window_size;
-        ring.set_max_len(window_size);
-    } else if ui.add(window_size_slider(local_window_size)).changed() {
-        ring.set_max_len(*local_window_size);
-    }
 }
 
 fn unit_axis_label(unit: Unit) -> &'static str {

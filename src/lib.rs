@@ -26,6 +26,8 @@ pub use metrics;
 pub use metrics_util;
 
 // TODO:
+// - "pause" button
+// - dedup some of the code between gauge and counter widgets
 // - don't assume there is a single egui context
 // - add metadata section to plot that includes description and labels
 // - automatic significant figures
