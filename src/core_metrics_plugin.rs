@@ -12,16 +12,8 @@ impl Plugin for CoreMetricsPlugin {
 }
 
 fn describe_core_metrics() {
-    describe_gauge!(
-        "frame_time",
-        Unit::Milliseconds,
-        "Frame time delta in milliseconds"
-    );
-    describe_histogram!(
-        "frame_time",
-        Unit::Milliseconds,
-        "Frame time delta in milliseconds"
-    );
+    describe_gauge!("frame_time", Unit::Milliseconds, "Frame time delta");
+    describe_histogram!("frame_time", Unit::Milliseconds, "Frame time delta");
     describe_gauge!(
         "frames_per_second",
         Unit::CountPerSecond,

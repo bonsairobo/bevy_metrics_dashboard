@@ -3,6 +3,7 @@
 use crate::dashboard_window::DashboardConfig;
 use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
+use crate::unit_str;
 use bevy::prelude::default;
 use bevy_egui::egui::{Color32, DragValue, Slider, Ui};
 use egui_plot::{Bar, BarChart, Line, Plot, PlotPoint, PlotPoints};
@@ -541,7 +542,7 @@ fn draw_plot(
             let line = Line::new(PlotPoints::Owned(plot_points));
             let mut plot = new_plot().x_axis_label("frame");
             if let Some(unit) = unit {
-                plot = plot.y_axis_label(unit_axis_label(unit));
+                plot = plot.y_axis_label(unit_str(unit));
             }
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
@@ -562,7 +563,7 @@ fn draw_plot(
             let line = Line::new(PlotPoints::Owned(plot_points));
             let mut plot = new_plot().x_axis_label("frame");
             if let Some(unit) = unit {
-                plot = plot.y_axis_label(unit_axis_label(unit));
+                plot = plot.y_axis_label(unit_str(unit));
             }
             plot.show(ui, |plot_ui| plot_ui.line(line));
 
@@ -575,7 +576,7 @@ fn draw_plot(
             let chart = data.make_bar_chart();
             let mut plot = new_plot().y_axis_label("count");
             if let Some(unit) = unit {
-                plot = plot.x_axis_label(unit_axis_label(unit));
+                plot = plot.x_axis_label(unit_str(unit));
             }
             plot.show(ui, |plot_ui| plot_ui.bar_chart(chart));
 
@@ -588,28 +589,6 @@ fn draw_plot(
 
 pub(crate) fn window_size_slider(size: &mut usize) -> Slider {
     Slider::new(size, 100..=5000).text("Window Size")
-}
-
-fn unit_axis_label(unit: Unit) -> &'static str {
-    match unit {
-        Unit::Count => "count",
-        Unit::Percent => "%",
-        Unit::Seconds => "s",
-        Unit::Milliseconds => "ms",
-        Unit::Microseconds => "μs",
-        Unit::Nanoseconds => "ns",
-        Unit::Tebibytes => "TiB",
-        Unit::Gigibytes => "GiB",
-        Unit::Mebibytes => "MiB",
-        Unit::Kibibytes => "KiB",
-        Unit::Bytes => "B",
-        Unit::TerabitsPerSecond => "Tb/s",
-        Unit::GigabitsPerSecond => "Gb/s",
-        Unit::MegabitsPerSecond => "Mb/s",
-        Unit::KilobitsPerSecond => "Kb/s",
-        Unit::BitsPerSecond => "b/s",
-        Unit::CountPerSecond => "hz",
-    }
 }
 
 struct Smoother {

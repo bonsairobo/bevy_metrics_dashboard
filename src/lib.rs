@@ -37,6 +37,7 @@ pub use metrics_util;
 // - rename and save plots
 // - drag and drop plots (requires egui 0.26)
 
+use metrics::Unit;
 use metrics_util::MetricKind;
 
 fn metric_kind_str(kind: MetricKind) -> &'static str {
@@ -44,5 +45,27 @@ fn metric_kind_str(kind: MetricKind) -> &'static str {
         MetricKind::Counter => "counter",
         MetricKind::Gauge => "gauge",
         MetricKind::Histogram => "histogram",
+    }
+}
+
+fn unit_str(unit: Unit) -> &'static str {
+    match unit {
+        Unit::Count => "count",
+        Unit::Percent => "%",
+        Unit::Seconds => "s",
+        Unit::Milliseconds => "ms",
+        Unit::Microseconds => "μs",
+        Unit::Nanoseconds => "ns",
+        Unit::Tebibytes => "TiB",
+        Unit::Gigibytes => "GiB",
+        Unit::Mebibytes => "MiB",
+        Unit::Kibibytes => "KiB",
+        Unit::Bytes => "B",
+        Unit::TerabitsPerSecond => "Tb/s",
+        Unit::GigabitsPerSecond => "Gb/s",
+        Unit::MegabitsPerSecond => "Mb/s",
+        Unit::KilobitsPerSecond => "Kb/s",
+        Unit::BitsPerSecond => "b/s",
+        Unit::CountPerSecond => "hz",
     }
 }

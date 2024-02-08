@@ -1,6 +1,6 @@
 //! The process-global metrics registry.
 
-use crate::metric_kind_str;
+use crate::{metric_kind_str, unit_str};
 use bevy::{
     prelude::{default, Res, Resource},
     utils::HashMap,
@@ -173,6 +173,16 @@ impl SearchResult {
                 ..default()
             },
         );
+        if let Some(unit) = self.description.as_ref().and_then(|d| d.unit) {
+            job.append(
+                &format!(" [{}]", unit_str(unit)),
+                0.0,
+                TextFormat {
+                    color: Color32::LIGHT_BLUE,
+                    ..default()
+                },
+            );
+        }
         for label in self.key.key.labels() {
             job.append("\n", 0.0, default());
             job.append(
