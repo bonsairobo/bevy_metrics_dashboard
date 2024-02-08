@@ -4,7 +4,7 @@ use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
 use bevy::prelude::default;
 use bevy_egui::egui::{Color32, DragValue, Slider, Ui};
-use egui_plot::{Bar, BarChart, Line, Plot, PlotPoints};
+use egui_plot::{Bar, BarChart, Line, Plot, PlotPoint, PlotPoints};
 use float_ord::FloatOrd;
 use metrics::atomics::AtomicU64;
 use metrics::Unit;
@@ -40,11 +40,15 @@ impl MetricPlotConfig {
 #[derive(Clone)]
 pub struct CounterPlotConfig {
     pub window_size: usize,
+    pub derivative: bool,
 }
 
 impl Default for CounterPlotConfig {
     fn default() -> Self {
-        Self { window_size: 500 }
+        Self {
+            window_size: 500,
+            derivative: false,
+        }
     }
 }
 
@@ -52,6 +56,7 @@ impl Default for CounterPlotConfig {
 pub struct GaugePlotConfig {
     pub smoothing_weight: f64,
     pub window_size: usize,
+    pub derivative: bool,
 }
 
 impl Default for GaugePlotConfig {
@@ -59,6 +64,7 @@ impl Default for GaugePlotConfig {
         Self {
             smoothing_weight: 0.8,
             window_size: 500,
+            derivative: false,
         }
     }
 }
@@ -173,7 +179,7 @@ struct CounterData {
 
 impl CounterData {
     fn new(config: CounterPlotConfig, source: Arc<AtomicU64>) -> Self {
-        let CounterPlotConfig { window_size } = config;
+        let CounterPlotConfig { window_size, .. } = config;
         Self {
             source,
             ring: Ring::new(window_size),
@@ -182,6 +188,7 @@ impl CounterData {
     }
 
     fn configure_ui(&mut self, ui: &mut Ui) {
+        ui.checkbox(&mut self.config.derivative, "Derivative");
         if ui
             .add(
                 Slider::new(
@@ -194,17 +201,6 @@ impl CounterData {
         {
             self.ring.set_max_len(self.config.window_size);
         }
-    }
-
-    fn make_line(&self) -> Line {
-        Line::new(PlotPoints::Owned(
-            self.ring
-                .iter_chronological()
-                .copied()
-                .enumerate()
-                .map(|(i, y)| [i as f64, y as f64].into())
-                .collect(),
-        ))
     }
 
     fn update(&mut self) {
@@ -225,6 +221,7 @@ impl GaugeData {
         let GaugePlotConfig {
             window_size,
             smoothing_weight,
+            ..
         } = config;
         Self {
             source,
@@ -235,6 +232,7 @@ impl GaugeData {
     }
 
     fn configure_ui(&mut self, ui: &mut Ui) {
+        ui.checkbox(&mut self.config.derivative, "Derivative");
         if ui
             .add(
                 Slider::new(
@@ -250,17 +248,6 @@ impl GaugeData {
 
         ui.add(Slider::new(&mut self.config.smoothing_weight, 0.0..=1.0).text("Smoothing Weight"));
         self.smoother.weight = self.config.smoothing_weight;
-    }
-
-    fn make_line(&self) -> Line {
-        Line::new(PlotPoints::Owned(
-            self.ring
-                .iter_chronological()
-                .copied()
-                .enumerate()
-                .map(|(i, y)| [i as f64, y].into())
-                .collect(),
-        ))
     }
 
     fn update(&mut self) {
@@ -535,7 +522,11 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
                 ui.label(format!("latest = {latest:.3}"));
             }
 
-            let line = data.make_line();
+            let mut plot_points = data.ring.make_plot_points();
+            if data.config.derivative {
+                derivative(&mut plot_points);
+            }
+            let line = Line::new(PlotPoints::Owned(plot_points));
             let mut plot = new_plot().x_axis_label("frame");
             if let Some(unit) = unit {
                 plot = plot.y_axis_label(unit_axis_label(unit));
@@ -551,7 +542,11 @@ fn draw_plot(name: &str, unit: Option<Unit>, data: &mut MetricPlotData, ui: &mut
                 ui.label(format!("latest = {latest:.3}"));
             }
 
-            let line = data.make_line();
+            let mut plot_points = data.ring.make_plot_points();
+            if data.config.derivative {
+                derivative(&mut plot_points);
+            }
+            let line = Line::new(PlotPoints::Owned(plot_points));
             let mut plot = new_plot().x_axis_label("frame");
             if let Some(unit) = unit {
                 plot = plot.y_axis_label(unit_axis_label(unit));
@@ -620,4 +615,19 @@ impl Smoother {
     fn smoothed_value(&self) -> f64 {
         self.smoothed_value.unwrap()
     }
+}
+
+fn derivative(points: &mut Vec<PlotPoint>) {
+    if points.is_empty() {
+        return;
+    }
+
+    if points.len() > 1 {
+        for i in 0..points.len() - 1 {
+            let dy = points[i + 1].y - points[i].y;
+            let dx = points[i + 1].x - points[i].x;
+            points[i].y = dy / dx;
+        }
+    }
+    points.pop();
 }

@@ -29,7 +29,6 @@ pub use metrics_util;
 // - per-window plot settings (e.g. window size)
 // - don't assume there is a single egui context
 // - add metadata section to plot that includes description and labels
-// - basic math functions? (e.g. derivative)
 // - automatic significant figures
 // - automatically determine histogram bucket bounds
 // - search by label and description

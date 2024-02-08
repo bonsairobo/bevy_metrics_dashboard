@@ -28,6 +28,7 @@ float-ord = "0.3.2"
 fuzzy-matcher = "0.3.7"
 metrics = "0.22.0"
 metrics-util = "0.16.0"
+num-traits = "0.2.18"
 smallvec = "1.13.1"
 
 [dependencies.bevy]

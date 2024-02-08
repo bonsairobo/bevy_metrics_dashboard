@@ -1,3 +1,4 @@
+use egui_plot::PlotPoint;
 use std::collections::VecDeque;
 
 /// A resizable ring buffer.
@@ -44,5 +45,15 @@ impl<T: Clone + Default> Ring<T> {
 
     pub fn iter_chronological(&self) -> impl Iterator<Item = &T> {
         self.elements.iter().rev()
+    }
+
+    pub fn make_plot_points(&self) -> Vec<PlotPoint>
+    where
+        T: num_traits::NumCast,
+    {
+        (0..)
+            .zip(self.iter_chronological().cloned())
+            .map(|(i, y)| [i.into(), num_traits::cast(y).unwrap()].into())
+            .collect()
     }
 }
