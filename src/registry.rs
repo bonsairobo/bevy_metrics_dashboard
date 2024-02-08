@@ -106,6 +106,17 @@ impl MetricsRegistry {
         let mut descriptions = self.inner.descriptions.write().unwrap();
         descriptions.entry(key).or_insert(description);
     }
+
+    /// Clear all atomic buckets used for storing histogram data.
+    pub fn clear_atomic_buckets(&self) {
+        self.inner.registry.visit_histograms(|_, h| {
+            h.clear();
+        });
+    }
+
+    pub(crate) fn clear_atomic_buckets_system(registry: Res<Self>) {
+        registry.clear_atomic_buckets();
+    }
 }
 
 impl Default for MetricsRegistry {
@@ -267,10 +278,4 @@ impl Recorder for MetricsRegistry {
             .registry
             .get_or_create_histogram(key, |c| c.clone().into())
     }
-}
-
-pub(crate) fn clear_atomic_buckets(registry: Res<MetricsRegistry>) {
-    registry.inner.registry.visit_histograms(|_, h| {
-        h.clear();
-    });
 }

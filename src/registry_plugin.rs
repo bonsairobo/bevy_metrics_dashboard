@@ -1,4 +1,4 @@
-use crate::registry::{clear_atomic_buckets, MetricsRegistry};
+use crate::registry::MetricsRegistry;
 use bevy::prelude::*;
 use metrics::set_global_recorder;
 
@@ -48,7 +48,9 @@ impl Plugin for RegistryPlugin {
             }
             registry
         };
-        app.insert_resource(registry)
-            .add_systems(Last, clear_atomic_buckets.in_set(ClearBucketsSystem));
+        app.insert_resource(registry).add_systems(
+            Last,
+            MetricsRegistry::clear_atomic_buckets_system.in_set(ClearBucketsSystem),
+        );
     }
 }
