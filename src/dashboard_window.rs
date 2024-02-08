@@ -25,6 +25,7 @@ pub struct DashboardWindow {
 #[derive(Default)]
 pub struct DashboardConfig {
     pub global_window_size: Option<usize>,
+    pub paused: bool,
 }
 
 impl DashboardWindow {
@@ -39,7 +40,9 @@ impl DashboardWindow {
 
     pub(crate) fn update_all(mut windows: Query<&mut DashboardWindow>) {
         for mut window in &mut windows {
-            window.update();
+            if !window.config.paused {
+                window.update();
+            }
         }
     }
 
@@ -106,6 +109,8 @@ impl DashboardWindow {
     }
 
     pub(crate) fn configure_ui(&mut self, ui: &mut Ui) {
+        ui.checkbox(&mut self.config.paused, "Pause");
+
         let mut lock_window_size = self.config.global_window_size.is_some();
         ui.checkbox(&mut lock_window_size, "Link X Axes");
         if lock_window_size {
