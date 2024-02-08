@@ -17,7 +17,7 @@ pub struct CachedPlotConfigs(HashMap<MetricKey, MetricPlotConfig>);
 #[derive(Component)]
 pub struct DashboardWindow {
     title: String,
-    finder: SearchBar,
+    search_bar: SearchBar,
     plots: Vec<MetricPlot>,
     config: DashboardConfig,
 }
@@ -32,7 +32,7 @@ impl DashboardWindow {
     pub fn new(title: impl Into<String>) -> Self {
         Self {
             title: title.into(),
-            finder: default(),
+            search_bar: default(),
             plots: default(),
             config: default(),
         }
@@ -84,7 +84,7 @@ impl DashboardWindow {
         cached_configs: &CachedPlotConfigs,
         ui: &mut Ui,
     ) {
-        let Some(selected) = self.finder.draw(registry, ui) else {
+        let Some(selected) = self.search_bar.draw(registry, ui) else {
             return;
         };
 

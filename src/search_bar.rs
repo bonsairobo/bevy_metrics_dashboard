@@ -64,6 +64,8 @@ impl SearchBar {
         if let Some(task) = self.search_task.take() {
             if task.is_finished() {
                 self.search_results = block_on(task);
+                self.search_results
+                    .sort_by(|r1, r2| r1.key.key.name().cmp(r2.key.key.name()));
             } else {
                 self.search_task = Some(task);
             }
