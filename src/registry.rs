@@ -77,27 +77,42 @@ impl MetricsRegistry {
         let descriptions = self.inner.descriptions.read().unwrap();
         reg.visit_counters(|key, _| {
             if matcher.fuzzy_match(key.name(), input).is_some() {
-                let key = MetricKey::new(key.clone(), MetricKind::Counter);
-                let desc_key = DescriptionKey::from(&key);
-                let description = descriptions.get(&desc_key).cloned();
-                results.push(SearchResult { key, description });
+                results.push(make_search_result(MetricKind::Counter, key, &descriptions));
             }
         });
         reg.visit_gauges(|key, _| {
             if matcher.fuzzy_match(key.name(), input).is_some() {
-                let key = MetricKey::new(key.clone(), MetricKind::Gauge);
-                let desc_key = DescriptionKey::from(&key);
-                let description = descriptions.get(&desc_key).cloned();
-                results.push(SearchResult { key, description });
+                results.push(make_search_result(MetricKind::Gauge, key, &descriptions));
             }
         });
         reg.visit_histograms(|key, _| {
             if matcher.fuzzy_match(key.name(), input).is_some() {
-                let key = MetricKey::new(key.clone(), MetricKind::Histogram);
-                let desc_key = DescriptionKey::from(&key);
-                let description = descriptions.get(&desc_key).cloned();
-                results.push(SearchResult { key, description });
+                results.push(make_search_result(
+                    MetricKind::Histogram,
+                    key,
+                    &descriptions,
+                ));
             }
+        });
+        results
+    }
+
+    pub fn all_metrics(&self) -> Vec<SearchResult> {
+        let mut results = Vec::new();
+        let reg = &self.inner.registry;
+        let descriptions = self.inner.descriptions.read().unwrap();
+        reg.visit_counters(|key, _| {
+            results.push(make_search_result(MetricKind::Counter, key, &descriptions));
+        });
+        reg.visit_gauges(|key, _| {
+            results.push(make_search_result(MetricKind::Gauge, key, &descriptions));
+        });
+        reg.visit_histograms(|key, _| {
+            results.push(make_search_result(
+                MetricKind::Histogram,
+                key,
+                &descriptions,
+            ));
         });
         results
     }
@@ -119,6 +134,17 @@ impl MetricsRegistry {
     }
 }
 
+fn make_search_result(
+    kind: MetricKind,
+    key: &Key,
+    descriptions: &HashMap<DescriptionKey, MetricDescription>,
+) -> SearchResult {
+    let key = MetricKey::new(key.clone(), kind);
+    let desc_key = DescriptionKey::from(&key);
+    let description = descriptions.get(&desc_key).cloned();
+    SearchResult { key, description }
+}
+
 impl Default for MetricsRegistry {
     fn default() -> Self {
         Self::new()
@@ -136,15 +162,16 @@ impl MetricKey {
         Self { key, kind }
     }
 
-    pub fn default_title(&self, n_duplicates: usize) -> String {
-        if n_duplicates > 0 {
-            format!(
-                "{} ({}) {n_duplicates}",
-                self.key.name(),
-                metric_kind_str(self.kind)
-            )
+    pub fn title(&self, display_path: Option<&str>, n_duplicates: usize) -> String {
+        let name = if let Some(path) = display_path {
+            path
         } else {
-            format!("{} ({})", self.key.name(), metric_kind_str(self.kind))
+            self.key.name()
+        };
+        if n_duplicates > 0 {
+            format!("{} ({}) {n_duplicates}", name, metric_kind_str(self.kind))
+        } else {
+            format!("{} ({})", name, metric_kind_str(self.kind))
         }
     }
 }
@@ -171,12 +198,14 @@ pub struct SearchResult {
 }
 
 impl SearchResult {
-    /// Text to display in the [`SearchBar`](crate::search_bar::SearchBar)'s
-    /// dropdown list.
-    pub fn dropdown_description(&self) -> LayoutJob {
+    /// Display the complete information of a search result.
+    ///
+    /// `display_path` will override the key's name, which is used for removing
+    /// layers of namespacing.
+    pub fn detailed_text(&self, display_path: Option<&str>) -> LayoutJob {
         let mut job = LayoutJob::default();
         job.append(
-            &self.key.default_title(0),
+            &self.key.title(display_path, 0),
             0.0,
             TextFormat {
                 // underline: Stroke::new(1.0, Color32::WHITE),

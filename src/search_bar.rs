@@ -54,7 +54,7 @@ impl SearchBar {
                     ui,
                     "metric-search-dropdown",
                     self.search_results.iter(),
-                    |&s| s.dropdown_description(),
+                    |&s| s.detailed_text(None),
                 )
                 .cloned()
             })

@@ -1,4 +1,5 @@
 use crate::{
+    namespace_tree::NamespaceTreeWindow,
     plots::{window_size_slider, MetricPlot, MetricPlotConfig},
     registry::{MetricKey, MetricsRegistry},
     search_bar::SearchBar,
@@ -8,6 +9,13 @@ use bevy_egui::{
     egui::{self, Ui},
     EguiContexts,
 };
+use metrics::Unit;
+
+#[derive(Clone, Event)]
+pub struct RequestPlot {
+    pub key: MetricKey,
+    pub unit: Option<Unit>,
+}
 
 /// Cache of configs for plots that have been opened and removed.
 #[derive(Default, Deref, DerefMut, Resource)]
@@ -38,7 +46,7 @@ impl DashboardWindow {
         }
     }
 
-    pub(crate) fn update_all(mut windows: Query<&mut DashboardWindow>) {
+    pub(crate) fn update_all(mut windows: Query<&mut Self>) {
         for mut window in &mut windows {
             if !window.config.paused {
                 window.update();
@@ -57,15 +65,27 @@ impl DashboardWindow {
         registry: Res<MetricsRegistry>,
         mut cached_configs: ResMut<CachedPlotConfigs>,
         mut ctxts: EguiContexts,
-        mut windows: Query<(Entity, &mut DashboardWindow)>,
+        mut requests: EventReader<RequestPlot>,
+        mut windows: Query<(Entity, &mut Self)>,
     ) {
+        let requests: Vec<_> = requests.read().cloned().collect();
+
         let ctxt = ctxts.ctx_mut();
         for (entity, mut window) in &mut windows {
+            for RequestPlot { key, unit } in requests.iter().cloned() {
+                window.add_plot(&registry, &cached_configs, key, unit);
+            }
+
             let mut open = true;
             egui::Window::new(&window.title)
                 .open(&mut open)
                 .show(ctxt, |ui| {
-                    window.add_search_results(&registry, &cached_configs, ui);
+                    ui.horizontal(|ui| {
+                        window.add_search_results(&registry, &cached_configs, ui);
+                        if ui.button("Browse").clicked() {
+                            commands.spawn(NamespaceTreeWindow::new("Namespace Viewer"));
+                        }
+                    });
                     ui.collapsing("Global Settings", |ui| {
                         window.configure_ui(ui);
                     });
@@ -88,22 +108,33 @@ impl DashboardWindow {
             return;
         };
 
-        // If we already have this metric, give it a unique name.
-        let n_duplicates = self
-            .plots
-            .iter()
-            .filter(|p| p.key() == &selected.key)
-            .count();
-
-        let plot_config = cached_configs
-            .get(&selected.key)
-            .cloned()
-            .unwrap_or_else(|| MetricPlotConfig::default_for_kind(selected.key.kind));
-        self.plots.push(MetricPlot::new(
+        self.add_plot(
             registry,
-            selected.key.default_title(n_duplicates),
+            cached_configs,
             selected.key,
             selected.description.and_then(|d| d.unit),
+        );
+    }
+
+    fn add_plot(
+        &mut self,
+        registry: &MetricsRegistry,
+        cached_configs: &CachedPlotConfigs,
+        key: MetricKey,
+        unit: Option<Unit>,
+    ) {
+        // If we already have this metric, give it a unique name.
+        let n_duplicates = self.plots.iter().filter(|p| p.key() == &key).count();
+
+        let plot_config = cached_configs
+            .get(&key)
+            .cloned()
+            .unwrap_or_else(|| MetricPlotConfig::default_for_kind(key.kind));
+        self.plots.push(MetricPlot::new(
+            registry,
+            key.title(None, n_duplicates),
+            key,
+            unit,
             plot_config,
         ));
     }
