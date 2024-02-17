@@ -71,7 +71,10 @@ impl SearchBar {
             }
         }
 
-        if self.input_dirty && self.last_search_time.elapsed() > Duration::from_millis(250) {
+        if self.input_dirty
+            && !self.search_input.is_empty()
+            && self.last_search_time.elapsed() > Duration::from_millis(250)
+        {
             // Spawn task to search the registry, just to avoid long frame times
             // when searching a large registry.
             self.last_search_time = Instant::now();
