@@ -525,8 +525,7 @@ fn draw_plot(
         Plot::new(name)
             .allow_scroll(false)
             .view_aspect(2.0)
-            .auto_bounds_x()
-            .auto_bounds_y()
+            .auto_bounds([true, true].into())
     };
 
     match data {

@@ -1,6 +1,6 @@
 [package]
 name = "bevy_metrics_dashboard"
-version = "0.1.0"
+version = "0.2.0"
 description = "Metrics dashboard for Bevy apps"
 edition = "2021"
 authors = ["Duncan Fairbanks <duncanfairbanks6@gmail.com>"]
@@ -22,8 +22,8 @@ opt-level = 2
 render_metrics = ["bevy/bevy_core_pipeline"]
 
 [dependencies]
-bevy_egui = "0.24.0"
-egui_plot = "0.24.2"
+bevy_egui = "0.27"
+egui_plot = "0.27"
 float-ord = "0.3.2"
 fuzzy-matcher = "0.3.7"
 metrics = "0.22.0"
@@ -32,13 +32,17 @@ num-traits = "0.2.18"
 smallvec = "1.13.1"
 
 [dependencies.bevy]
-version = "0.12.1"
+version = "0.13"
 default-features = false
 features = ["multi-threaded"]
 
 [dev-dependencies]
-bevy = "0.12.1"
 rand = "0.8.5"
+
+[dev-dependencies.bevy]
+version = "0.13"
+default-features = false
+features = ["wayland"]
 
 [[example]]
 name = "stress"
