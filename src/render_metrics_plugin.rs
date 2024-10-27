@@ -34,7 +34,7 @@ fn update_render_metrics(
             format!("{}v{}", entity.index(), entity.generation()),
         )];
         let gauge = gauge!("visible_2d_entities", &labels);
-        gauge.set(visible.len() as f64);
+        gauge.set(visible.len::<()>() as f64);
     }
     for (entity, visible) in &cameras_3d {
         let labels = [(
@@ -42,6 +42,6 @@ fn update_render_metrics(
             format!("{}v{}", entity.index(), entity.generation()),
         )];
         let gauge = gauge!("visible_3d_entities", &labels);
-        gauge.set(visible.len() as f64);
+        gauge.set(visible.len::<()>() as f64);
     }
 }

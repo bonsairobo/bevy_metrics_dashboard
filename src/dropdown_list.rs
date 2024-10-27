@@ -20,23 +20,30 @@ where
     }
 
     let mut return_val = None;
-    popup_below_widget(ui, popup_id, &drop_from_widget, |ui| {
-        let select_first = ui.input(|i| i.key_pressed(Key::Enter));
-        ScrollArea::vertical().max_height(200.0).show(ui, |ui| {
-            let mut first = true;
-            for item in items {
-                let text = get_text(&item);
+    popup_below_widget(
+        ui,
+        popup_id,
+        &drop_from_widget,
+        PopupCloseBehavior::CloseOnClickOutside,
+        |ui: &mut Ui| {
+            let select_first = ui.input(|i| i.key_pressed(Key::Enter));
+            ScrollArea::vertical().max_height(200.0).show(ui, |ui| {
+                let mut first = true;
+                for item in items {
+                    let text = get_text(&item);
 
-                // TODO: implement arrow key browsing, have the one that'd be
-                // selected by enter highlighted
-                if ui.selectable_label(false, text.into()).clicked() || (select_first && first) {
-                    return_val = Some(item);
-                    ui.memory_mut(|m| m.close_popup());
+                    // TODO: implement arrow key browsing, have the one that'd be
+                    // selected by enter highlighted
+                    if ui.selectable_label(false, text.into()).clicked() || (select_first && first)
+                    {
+                        return_val = Some(item);
+                        ui.memory_mut(|m| m.close_popup());
+                    }
+                    first = false;
                 }
-                first = false;
-            }
-        });
-    });
+            });
+        },
+    );
 
     return_val
 }
