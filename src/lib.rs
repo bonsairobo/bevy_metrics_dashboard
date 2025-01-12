@@ -57,7 +57,7 @@ fn unit_str(unit: Unit) -> &'static str {
         Unit::Microseconds => "μs",
         Unit::Nanoseconds => "ns",
         Unit::Tebibytes => "TiB",
-        Unit::Gigibytes => "GiB",
+        Unit::Gibibytes => "GiB",
         Unit::Mebibytes => "MiB",
         Unit::Kibibytes => "KiB",
         Unit::Bytes => "B",

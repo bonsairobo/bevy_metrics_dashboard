@@ -10,7 +10,7 @@ use egui_plot::{Bar, BarChart, Line, Plot, PlotPoint, PlotPoints};
 use float_ord::FloatOrd;
 use metrics::atomics::AtomicU64;
 use metrics::Unit;
-use metrics_util::{AtomicBucket, MetricKind};
+use metrics_util::{storage::AtomicBucket, MetricKind};
 use smallvec::{smallvec, SmallVec};
 use std::sync::{atomic::Ordering, Arc};
 

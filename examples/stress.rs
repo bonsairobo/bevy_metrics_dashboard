@@ -35,7 +35,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
 
     let sprite_handle = assets.load("icon.png");
 
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d);
 
     // Builds and spawns the sprites
     let mut sprites = vec![];
@@ -46,20 +46,19 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             let rotation = Quat::from_rotation_z(rng.gen::<f32>());
             let scale = Vec3::splat(rng.gen::<f32>() * 2.0);
 
-            sprites.push(SpriteBundle {
-                texture: sprite_handle.clone(),
-                transform: Transform {
-                    translation,
-                    rotation,
-                    scale,
-                },
-                sprite: Sprite {
+            sprites.push((
+                Sprite{
+                    image: sprite_handle.clone(),
                     custom_size: Some(tile_size),
                     color: Color::WHITE,
                     ..default()
                 },
-                ..default()
-            });
+                Transform {
+                    translation,
+                    rotation,
+                    scale,
+                }
+            ));
         }
     }
     commands.spawn_batch(sprites);
@@ -67,5 +66,5 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
 
 fn move_camera(time: Res<Time>, mut camera_query: Query<&mut Transform, With<Camera>>) {
     let mut camera_transform = camera_query.single_mut();
-    camera_transform.rotate_z(time.delta_seconds() * 0.1);
+    camera_transform.rotate_z(time.delta_secs() * 0.1);
 }

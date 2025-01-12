@@ -29,7 +29,7 @@ fn describe_core_metrics() {
 fn update_core_metrics(entities: &Entities, time: Res<Time>) {
     gauge!("entities").set(entities.len() as f64);
 
-    let sec = time.delta_seconds_f64();
+    let sec = time.delta_secs_f64();
     let ms = 1000.0 * sec;
     let fps = 1.0 / sec;
     histogram!("frame_time").record(ms);
