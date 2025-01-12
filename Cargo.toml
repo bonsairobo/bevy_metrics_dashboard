@@ -34,7 +34,9 @@ smallvec = "1.13.1"
 [dependencies.bevy]
 version = "0.15"
 default-features = false
-features = ["multi_threaded"]
+# TODO: we shouldn't need to enable "wayland" unconditionally, but bevy 0.15
+# seems to have broken the build without it
+features = ["multi_threaded", "wayland"]
 
 [dev-dependencies]
 rand = "0.8.5"
