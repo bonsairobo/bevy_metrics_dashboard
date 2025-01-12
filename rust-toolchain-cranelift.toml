@@ -1,4 +1,0 @@
-[toolchain]
-profile = "default"
-channel = "nightly"
-components = ["rustc-codegen-cranelift-preview", "rustfmt", "rust-analyzer", "rust-src"]
