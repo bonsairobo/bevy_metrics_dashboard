@@ -30,10 +30,9 @@ See the "examples" directory.
 Steps for plotting your metrics:
 
   1. Define metrics using the [`metrics`] crate.
-  1. Add the [`EguiPlugin`][egui_plugin], [`RegistryPlugin`], and [`DashboardPlugin`] to your app.
+  1. Add the `bevy_egui::EguiPlugin`, [`RegistryPlugin`], and `DashboardPlugin`
+     to your app. You may need to enable the `bevy_egui` feature.
   1. Spawn an entity with the [`DashboardWindow`] component.
-
-[egui_plugin]: bevy_egui::EguiPlugin
 
 # Low-Level API
 

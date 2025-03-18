@@ -1,16 +1,17 @@
 use crate::{
-    namespace_tree::NamespaceTreeWindow,
     plots::{window_size_slider, MetricPlot, MetricPlotConfig},
     registry::{MetricKey, MetricsRegistry},
     search_bar::SearchBar,
 };
 use bevy::{prelude::*, utils::HashMap};
-use bevy_egui::{
-    egui::{self, Ui},
-    EguiContexts,
-};
+use egui::{self, Ui};
 use metrics::Unit;
 
+#[cfg(feature = "bevy_egui")]
+use crate::namespace_tree::NamespaceTreeWindow;
+
+/// Event used to create a new plot in all [`DashboardWindow`] entities.
+#[allow(missing_docs)]
 #[derive(Clone, Event)]
 pub struct RequestPlot {
     pub key: MetricKey,
@@ -30,13 +31,19 @@ pub struct DashboardWindow {
     config: DashboardConfig,
 }
 
+/// Configuration for a single [`DashboardWindow`].
+///
+/// Can be edited with [`DashboardWindow::configure_ui`].
 #[derive(Default)]
 pub struct DashboardConfig {
+    /// Synchronizes the window size of all plots in this window.
     pub global_window_size: Option<usize>,
+    /// Pauses all plots.
     pub paused: bool,
 }
 
 impl DashboardWindow {
+    /// Create a new dashboard window without any plots.
     pub fn new(title: impl Into<String>) -> Self {
         Self {
             title: title.into(),
@@ -46,25 +53,37 @@ impl DashboardWindow {
         }
     }
 
-    pub(crate) fn update_all(mut windows: Query<&mut Self>) {
+    /// The window title.
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    /// Bevy system that calls [`Self::update_plots`] on all window entities.
+    pub fn update_plots_on_all_windows(mut windows: Query<&mut Self>) {
         for mut window in &mut windows {
             if !window.config.paused {
-                window.update();
+                window.update_plots();
             }
         }
     }
 
-    pub(crate) fn update(&mut self) {
+    /// Calls [`MetricPlot::update`] on all plots in this window.
+    pub fn update_plots(&mut self) {
         for plot in &mut self.plots {
             plot.update();
         }
     }
 
-    pub(crate) fn draw_all(
+    #[cfg(feature = "bevy_egui")]
+    /// Bevy system that draws all [`DashboardWindow`] entities into the
+    /// [`bevy_egui::EguiContexts`].
+    ///
+    /// Also handles [`RequestPlot`] events by creating a new plot in each window.
+    pub fn draw_all(
         mut commands: Commands,
         registry: Res<MetricsRegistry>,
         mut cached_configs: ResMut<CachedPlotConfigs>,
-        mut ctxts: EguiContexts,
+        mut ctxts: bevy_egui::EguiContexts,
         mut requests: EventReader<RequestPlot>,
         mut windows: Query<(Entity, &mut Self)>,
     ) {
@@ -81,7 +100,7 @@ impl DashboardWindow {
                 .open(&mut open)
                 .show(ctxt, |ui| {
                     ui.horizontal(|ui| {
-                        window.add_search_results(&registry, &cached_configs, ui);
+                        window.plot_selected_search_result(&registry, &cached_configs, ui);
                         if ui.button("Browse").clicked() {
                             commands.spawn(NamespaceTreeWindow::new("Namespace Viewer"));
                         }
@@ -98,7 +117,9 @@ impl DashboardWindow {
         }
     }
 
-    pub(crate) fn add_search_results(
+    /// If a result from the [`SearchBar`] is selected, a corresponding
+    /// [`MetricPlot`] will be added to this window.
+    pub fn plot_selected_search_result(
         &mut self,
         registry: &MetricsRegistry,
         cached_configs: &CachedPlotConfigs,
@@ -139,7 +160,8 @@ impl DashboardWindow {
         ));
     }
 
-    pub(crate) fn configure_ui(&mut self, ui: &mut Ui) {
+    /// Draw the plot configuration UI.
+    pub fn configure_ui(&mut self, ui: &mut Ui) {
         ui.checkbox(&mut self.config.paused, "Pause");
 
         let mut lock_window_size = self.config.global_window_size.is_some();
@@ -152,7 +174,8 @@ impl DashboardWindow {
         }
     }
 
-    pub(crate) fn draw_plots(&mut self, cached_configs: &mut CachedPlotConfigs, ui: &mut Ui) {
+    /// Draw all [`MetricPlot`]s in this window.
+    pub fn draw_plots(&mut self, cached_configs: &mut CachedPlotConfigs, ui: &mut Ui) {
         let mut remove_plots = Vec::new();
 
         egui::ScrollArea::vertical().show(ui, |ui| {

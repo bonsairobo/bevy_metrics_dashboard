@@ -7,7 +7,7 @@ authors = ["Duncan Fairbanks <duncanfairbanks6@gmail.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/bonsairobo/bevy_metrics_dashboard"
 homepage = "https://github.com/bonsairobo/bevy_metrics_dashboard"
-# documentation = "https://docs.rs/bevy_metrics_dashboard"
+documentation = "https://docs.rs/bevy_metrics_dashboard"
 readme = "README.md"
 keywords = ["bevy", "egui", "monitoring"]
 categories = ["development-tools", "game-development"]
@@ -22,7 +22,8 @@ opt-level = 2
 render_metrics = ["bevy/bevy_core_pipeline"]
 
 [dependencies]
-bevy_egui = "0.30"
+bevy_egui = { version = "0.30", optional = true }
+egui = "0.29"
 egui_plot = "0.29"
 float-ord = "0.3.2"
 fuzzy-matcher = "0.3.7"
@@ -47,8 +48,14 @@ features = ["bevy_sprite", "png", "wayland"]
 [[example]]
 name = "stress"
 path = "examples/stress.rs"
-required-features = ["render_metrics"]
+required-features = ["bevy_egui", "render_metrics"]
 
 [[example]]
 name = "many_metrics"
 path = "examples/many_metrics.rs"
+required-features = ["bevy_egui"]
+
+[[example]]
+name = "namespace_tree"
+path = "examples/namespace_tree.rs"
+required-features = ["bevy_egui"]

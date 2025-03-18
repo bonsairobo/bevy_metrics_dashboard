@@ -1,19 +1,16 @@
-use crate::{
-    dashboard_window::RequestPlot,
-    registry::{MetricsRegistry, SearchResult},
-};
+use crate::registry::{MetricsRegistry, SearchResult};
 use bevy::{
     prelude::*,
     tasks::{block_on, AsyncComputeTaskPool, Task},
 };
-use bevy_egui::{
-    egui::{self, Ui},
-    EguiContexts,
-};
+use egui::{self, Ui};
 use std::{
     sync::atomic::{AtomicU64, Ordering},
     time::{Duration, Instant},
 };
+
+#[cfg(feature = "bevy_egui")]
+use crate::RequestPlot;
 
 /// A widget that shows all metrics metadata in a tree, grouped by namespace.
 ///
@@ -23,14 +20,15 @@ use std::{
 pub struct NamespaceTreeWindow {
     title: String,
     id: egui::Id,
-    force_refresh: bool,
     refresh_period: Duration,
+    is_new: bool,
     last_refresh_time: Instant,
     refresh_task: Option<Task<Vec<NamespaceNode>>>,
     roots: Vec<NamespaceNode>,
 }
 
 impl NamespaceTreeWindow {
+    /// Create a new window.
     pub fn new(title: impl Into<String>) -> Self {
         static WINDOW_ID: AtomicU64 = AtomicU64::new(0);
         let id = WINDOW_ID.fetch_add(1, Ordering::Relaxed);
@@ -39,26 +37,35 @@ impl NamespaceTreeWindow {
         Self {
             title,
             id,
-            force_refresh: true,
             refresh_period: Duration::from_secs(5),
+            is_new: true,
             last_refresh_time: Instant::now(),
             refresh_task: Default::default(),
             roots: Default::default(),
         }
     }
 
-    pub fn force_refresh(&mut self) {
-        self.force_refresh = true;
+    /// The window's title.
+    pub fn title(&self) -> &str {
+        &self.title
     }
 
+    /// The window's [`egui::Id`].
+    pub fn id(&self) -> &egui::Id {
+        &self.id
+    }
+
+    /// Set the time between updates of the tree.
     pub fn set_refresh_period(&mut self, period: Duration) {
         self.refresh_period = period;
     }
 
-    pub(crate) fn draw_all(
+    #[cfg(feature = "bevy_egui")]
+    /// Bevy system that draws all namespace tree window entities.
+    pub fn draw_all(
         mut commands: Commands,
         registry: Res<MetricsRegistry>,
-        mut ctxts: EguiContexts,
+        mut ctxts: bevy_egui::EguiContexts,
         mut requests: EventWriter<RequestPlot>,
         mut windows: Query<(Entity, &mut Self)>,
     ) {
@@ -70,7 +77,7 @@ impl NamespaceTreeWindow {
                 .open(&mut open)
                 .show(ctxt, |ui| {
                     if let Some(result) = window.draw(&registry, ui) {
-                        requests.send(RequestPlot {
+                        requests.send(crate::RequestPlot {
                             key: result.key,
                             unit: result.description.and_then(|d| d.unit),
                         });
@@ -86,8 +93,8 @@ impl NamespaceTreeWindow {
     ///
     /// If the user selects a metric, it will be returned.
     pub fn draw(&mut self, registry: &MetricsRegistry, ui: &mut Ui) -> Option<SearchResult> {
-        if self.force_refresh || self.last_refresh_time.elapsed() > self.refresh_period {
-            self.force_refresh = false;
+        if self.is_new || self.last_refresh_time.elapsed() > self.refresh_period {
+            self.is_new = false;
             let task_registry = registry.clone();
             self.refresh_task = Some(AsyncComputeTaskPool::get().spawn(async move {
                 let mut results = task_registry.all_metrics();

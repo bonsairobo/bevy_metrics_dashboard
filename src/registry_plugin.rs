@@ -20,6 +20,7 @@ pub struct RegistryPlugin {
 pub struct ClearBucketsSystem;
 
 impl RegistryPlugin {
+    /// Create a default plugin.
     pub fn new() -> Self {
         Self::default()
     }
