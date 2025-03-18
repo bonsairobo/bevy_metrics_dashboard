@@ -1,15 +1,15 @@
+use crate::egui::{self, Ui};
 use crate::registry::{MetricsRegistry, SearchResult};
 use bevy::{
     prelude::*,
     tasks::{block_on, AsyncComputeTaskPool, Task},
 };
-use egui::{self, Ui};
 use std::{
     sync::atomic::{AtomicU64, Ordering},
     time::{Duration, Instant},
 };
 
-#[cfg(feature = "bevy_egui")]
+#[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
 use crate::RequestPlot;
 
 /// A widget that shows all metrics metadata in a tree, grouped by namespace.
@@ -60,7 +60,7 @@ impl NamespaceTreeWindow {
         self.refresh_period = period;
     }
 
-    #[cfg(feature = "bevy_egui")]
+    #[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
     /// Bevy system that draws all namespace tree window entities.
     pub fn draw_all(
         mut commands: Commands,
