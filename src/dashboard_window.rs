@@ -58,6 +58,11 @@ impl DashboardWindow {
         &self.title
     }
 
+    /// This window's configuration.
+    pub fn config(&self) -> &DashboardConfig {
+        &self.config
+    }
+
     /// Bevy system that calls [`Self::update_plots`] on all window entities.
     pub fn update_plots_on_all_windows(mut windows: Query<&mut Self>) {
         for mut window in &mut windows {
