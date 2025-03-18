@@ -1,11 +1,11 @@
 //! The process-global metrics registry.
 
+use crate::egui::{text::LayoutJob, Color32, TextFormat};
 use crate::{metric_kind_str, unit_str};
 use bevy::{
     prelude::{default, Res, Resource},
     utils::HashMap,
 };
-use egui::{text::LayoutJob, Color32, TextFormat};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use metrics::{Counter, Gauge, Histogram, KeyName, Metadata, Recorder, SharedString, Unit};
 use metrics_util::{

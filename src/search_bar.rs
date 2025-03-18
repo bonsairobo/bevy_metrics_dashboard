@@ -1,11 +1,11 @@
 //! Widget for search the metrics registry.
 
+use crate::egui::{TextEdit, Ui};
 use crate::{
     dropdown_list::dropdown_list,
     registry::{MetricsRegistry, SearchResult},
 };
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
-use egui::{TextEdit, Ui};
 use std::time::{Duration, Instant};
 
 /// A widget that searches the [`MetricsRegistry`] with fuzzy string matching.

@@ -19,12 +19,21 @@ categories = ["development-tools", "game-development"]
 opt-level = 2
 
 [features]
+
+# The version of egui supported by bevy_egui
+default = ["egui_30"]
+
+egui_30 = ["dep:egui_30", "dep:egui_plot_30"]
+egui_31 = ["dep:egui_31", "dep:egui_plot_31"]
+
 render_metrics = ["bevy/bevy_core_pipeline"]
 
 [dependencies]
 bevy_egui = { version = "0.32", optional = true }
-egui = "0.30"
-egui_plot = "0.30"
+egui_30 = { package = "egui", version = "0.30", optional = true }
+egui_31 = { package = "egui", version = "0.31", optional = true }
+egui_plot_30 = { package = "egui_plot", version = "0.30", optional = true }
+egui_plot_31 = { package = "egui_plot", version = "0.31", optional = true }
 float-ord = "0.3.2"
 fuzzy-matcher = "0.3.7"
 metrics = "0.24.1"
@@ -55,9 +64,9 @@ required-features = ["bevy_egui", "render_metrics"]
 [[example]]
 name = "many_metrics"
 path = "examples/many_metrics.rs"
-required-features = ["bevy_egui"]
+required-features = ["egui_30", "bevy_egui"]
 
 [[example]]
 name = "namespace_tree"
 path = "examples/namespace_tree.rs"
-required-features = ["bevy_egui"]
+required-features = ["egui_30", "bevy_egui"]

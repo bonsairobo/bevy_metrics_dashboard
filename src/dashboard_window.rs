@@ -1,13 +1,13 @@
+use crate::egui::{self, Ui};
 use crate::{
     plots::{window_size_slider, MetricPlot, MetricPlotConfig},
     registry::{MetricKey, MetricsRegistry},
     search_bar::SearchBar,
 };
 use bevy::{prelude::*, utils::HashMap};
-use egui::{self, Ui};
 use metrics::Unit;
 
-#[cfg(feature = "bevy_egui")]
+#[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
 use crate::namespace_tree::NamespaceTreeWindow;
 
 /// Event used to create a new plot in all [`DashboardWindow`] entities.
@@ -74,7 +74,7 @@ impl DashboardWindow {
         }
     }
 
-    #[cfg(feature = "bevy_egui")]
+    #[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
     /// Bevy system that draws all [`DashboardWindow`] entities into the
     /// [`bevy_egui::EguiContexts`].
     ///
@@ -137,7 +137,8 @@ impl DashboardWindow {
         );
     }
 
-    fn add_plot(
+    /// Add a new [`MetricPlot`] to this window.
+    pub fn add_plot(
         &mut self,
         registry: &MetricsRegistry,
         cached_configs: &CachedPlotConfigs,

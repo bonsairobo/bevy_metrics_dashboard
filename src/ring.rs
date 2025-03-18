@@ -1,4 +1,4 @@
-use egui_plot::PlotPoint;
+use crate::egui_plot::PlotPoint;
 use std::collections::VecDeque;
 
 /// A resizable ring buffer.

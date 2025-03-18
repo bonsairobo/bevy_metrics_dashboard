@@ -1,12 +1,12 @@
 //! Widgets for plotting metrics.
 
 use crate::dashboard_window::DashboardConfig;
+use crate::egui::{Color32, DragValue, Slider, Ui, Vec2b};
+use crate::egui_plot::{Bar, BarChart, Line, Plot, PlotPoint, PlotPoints};
 use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
 use crate::unit_str;
 use bevy::prelude::default;
-use egui::{Color32, DragValue, Slider, Ui};
-use egui_plot::{Bar, BarChart, Line, Plot, PlotPoint, PlotPoints};
 use float_ord::FloatOrd;
 use metrics::atomics::AtomicU64;
 use metrics::Unit;
@@ -552,7 +552,7 @@ fn draw_plot(
         Plot::new(name)
             .allow_scroll(false)
             .view_aspect(2.0)
-            .auto_bounds([true, true].into())
+            .auto_bounds(Vec2b::new(true, true))
     };
 
     match data {
