@@ -5,7 +5,7 @@ use crate::{
     registry::{MetricsRegistry, SearchResult},
 };
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
-use bevy_egui::egui::{TextEdit, Ui};
+use egui::{TextEdit, Ui};
 use std::time::{Duration, Instant};
 
 /// A widget that searches the [`MetricsRegistry`] with fuzzy string matching.
@@ -24,6 +24,7 @@ impl Default for SearchBar {
 }
 
 impl SearchBar {
+    /// Create an empty search bar.
     pub fn new() -> Self {
         Self {
             search_input: Default::default(),

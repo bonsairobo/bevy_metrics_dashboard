@@ -5,9 +5,9 @@ use bevy::{
     prelude::{default, Res, Resource},
     utils::HashMap,
 };
-use bevy_egui::egui::{text::LayoutJob, Color32, TextFormat};
+use egui::{text::LayoutJob, Color32, TextFormat};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
-use metrics::{Counter, Gauge, Histogram, Key, KeyName, Metadata, Recorder, SharedString, Unit};
+use metrics::{Counter, Gauge, Histogram, KeyName, Metadata, Recorder, SharedString, Unit};
 use metrics_util::{
     registry::{AtomicStorage, Registry},
     storage::AtomicBucket, MetricKind,
@@ -26,10 +26,12 @@ pub struct MetricsRegistry {
 }
 
 struct Inner {
-    registry: Registry<Key, AtomicStorage>,
+    registry: Registry<metrics::Key, AtomicStorage>,
     descriptions: RwLock<HashMap<DescriptionKey, MetricDescription>>,
 }
 
+/// A description of some metric, displayed when searching the registry or plotting.
+#[allow(missing_docs)]
 #[derive(Clone)]
 pub struct MetricDescription {
     pub unit: Option<Unit>,
@@ -46,21 +48,26 @@ impl Inner {
 }
 
 impl MetricsRegistry {
+    /// Create an empty registry.
     pub fn new() -> Self {
         Self {
             inner: Arc::new(Inner::new()),
         }
     }
 
-    pub fn get_or_create_counter(&self, key: &Key) -> Arc<AtomicU64> {
+    #[allow(missing_docs)]
+    pub fn get_or_create_counter(&self, key: &metrics::Key) -> Arc<AtomicU64> {
         self.inner.registry.get_or_create_counter(key, Arc::clone)
     }
-    pub fn get_or_create_gauge(&self, key: &Key) -> Arc<AtomicU64> {
+    #[allow(missing_docs)]
+    pub fn get_or_create_gauge(&self, key: &metrics::Key) -> Arc<AtomicU64> {
         self.inner.registry.get_or_create_gauge(key, Arc::clone)
     }
-    pub fn get_or_create_histogram(&self, key: &Key) -> Arc<AtomicBucket<f64>> {
+    #[allow(missing_docs)]
+    pub fn get_or_create_histogram(&self, key: &metrics::Key) -> Arc<AtomicBucket<f64>> {
         self.inner.registry.get_or_create_histogram(key, Arc::clone)
     }
+    #[allow(missing_docs)]
     pub fn get_description(&self, key: &DescriptionKey) -> Option<MetricDescription> {
         self.inner.descriptions.read().unwrap().get(key).cloned()
     }
@@ -97,6 +104,7 @@ impl MetricsRegistry {
         results
     }
 
+    /// Get a search result for every registered metric.
     pub fn all_metrics(&self) -> Vec<SearchResult> {
         let mut results = Vec::new();
         let reg = &self.inner.registry;
@@ -136,7 +144,7 @@ impl MetricsRegistry {
 
 fn make_search_result(
     kind: MetricKind,
-    key: &Key,
+    key: &metrics::Key,
     descriptions: &HashMap<DescriptionKey, MetricDescription>,
 ) -> SearchResult {
     let key = MetricKey::new(key.clone(), kind);
@@ -151,17 +159,21 @@ impl Default for MetricsRegistry {
     }
 }
 
+/// Identifies some metric in the registry.
+#[allow(missing_docs)]
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct MetricKey {
-    pub key: Key,
+    pub key: metrics::Key,
     pub kind: MetricKind,
 }
 
 impl MetricKey {
-    pub fn new(key: Key, kind: MetricKind) -> Self {
+    #[allow(missing_docs)]
+    pub fn new(key: metrics::Key, kind: MetricKind) -> Self {
         Self { key, kind }
     }
 
+    /// The text used when displaying search results and assigning a title to a plot.
     pub fn title(&self, display_path: Option<&str>, n_duplicates: usize) -> String {
         let name = if let Some(path) = display_path {
             path
@@ -176,6 +188,8 @@ impl MetricKey {
     }
 }
 
+/// Key used for storing metric descriptions.
+#[allow(missing_docs)]
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct DescriptionKey {
     pub name: KeyName,
@@ -191,6 +205,8 @@ impl From<&MetricKey> for DescriptionKey {
     }
 }
 
+/// Metadata for a metric.
+#[allow(missing_docs)]
 #[derive(Clone)]
 pub struct SearchResult {
     pub key: MetricKey,
@@ -290,19 +306,19 @@ impl Recorder for MetricsRegistry {
         );
     }
 
-    fn register_counter(&self, key: &Key, _metadata: &Metadata<'_>) -> Counter {
+    fn register_counter(&self, key: &metrics::Key, _metadata: &Metadata<'_>) -> Counter {
         self.inner
             .registry
             .get_or_create_counter(key, |c| c.clone().into())
     }
 
-    fn register_gauge(&self, key: &Key, _metadata: &Metadata<'_>) -> Gauge {
+    fn register_gauge(&self, key: &metrics::Key, _metadata: &Metadata<'_>) -> Gauge {
         self.inner
             .registry
             .get_or_create_gauge(key, |c| c.clone().into())
     }
 
-    fn register_histogram(&self, key: &Key, _metadata: &Metadata<'_>) -> Histogram {
+    fn register_histogram(&self, key: &metrics::Key, _metadata: &Metadata<'_>) -> Histogram {
         self.inner
             .registry
             .get_or_create_histogram(key, |c| c.clone().into())

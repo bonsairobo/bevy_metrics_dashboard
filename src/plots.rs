@@ -5,7 +5,7 @@ use crate::registry::{MetricKey, MetricsRegistry};
 use crate::ring::Ring;
 use crate::unit_str;
 use bevy::prelude::default;
-use bevy_egui::egui::{Color32, DragValue, Slider, Ui};
+use egui::{Color32, DragValue, Slider, Ui};
 use egui_plot::{Bar, BarChart, Line, Plot, PlotPoint, PlotPoints};
 use float_ord::FloatOrd;
 use metrics::atomics::AtomicU64;
@@ -20,6 +20,8 @@ use std::sync::{atomic::Ordering, Arc};
 //
 // https://github.com/emilk/egui/issues/3970
 
+/// Configuration for one [`MetricPlot`].
+#[allow(missing_docs)]
 #[derive(Clone)]
 pub enum MetricPlotConfig {
     Counter(CounterPlotConfig),
@@ -28,6 +30,7 @@ pub enum MetricPlotConfig {
 }
 
 impl MetricPlotConfig {
+    /// Default configuration for the given `kind` of metric being plotted.
     pub fn default_for_kind(kind: MetricKind) -> Self {
         match kind {
             MetricKind::Counter => MetricPlotConfig::Counter(default()),
@@ -37,9 +40,12 @@ impl MetricPlotConfig {
     }
 }
 
+/// Configuration for a [`MetricPlot`] of [`MetricKind::Counter`].
 #[derive(Clone)]
 pub struct CounterPlotConfig {
+    /// How many samples are drawn in one plot.
     pub window_size: usize,
+    /// If true, plots the time derivative.
     pub derivative: bool,
 }
 
@@ -52,10 +58,14 @@ impl Default for CounterPlotConfig {
     }
 }
 
+/// Configuration for a [`MetricPlot`] of [`MetricKind::Gauge`].
 #[derive(Clone)]
 pub struct GaugePlotConfig {
+    /// A weight in `0.0..=1.0` used for exponential smoothing.
     pub smoothing_weight: f64,
+    /// How many samples are drawn in one plot.
     pub window_size: usize,
+    /// If true, plots the time derivative.
     pub derivative: bool,
 }
 
@@ -69,12 +79,14 @@ impl Default for GaugePlotConfig {
     }
 }
 
+/// Configuration for a [`MetricPlot`] of [`MetricKind::Histogram`].
 #[derive(Clone)]
 pub struct HistogramPlotConfig {
     /// When `Some`, the bar chart is derived from a sliding window of
     /// data. Otherwise, the bar chart retains all data until it is reset or
     /// reconfigured.
     pub window_size: Option<usize>,
+    #[allow(missing_docs)]
     pub buckets: BucketConfig,
 }
 
@@ -87,16 +99,24 @@ impl Default for HistogramPlotConfig {
     }
 }
 
+/// Configuration of the buckets in a histogram.
 #[derive(Clone)]
 pub struct BucketConfig {
     /// Sorted list of boundaries between contiguous bucket ranges.
+    ///
+    /// Derived from [`Self::range_input`].
     pub bounds: BoundsVec,
+    #[allow(missing_docs)]
     pub range_input: BucketRange,
 }
 
+#[allow(missing_docs)]
 pub type BoundsVec = SmallVec<[f64; 16]>;
+#[allow(missing_docs)]
 pub type CountsVec = SmallVec<[u32; 16]>;
 
+/// A uniformly distributed set of buckets.
+#[allow(missing_docs)]
 #[derive(Clone)]
 pub struct BucketRange {
     pub n_buckets: usize,
@@ -115,6 +135,7 @@ impl BucketRange {
         self.max = (self.min + 0.001).max(self.max);
     }
 
+    /// Calculate bounds of all buckets.
     pub fn get_bounds(&self) -> BoundsVec {
         assert!(self.max > self.min, "{} > {}", self.max, self.min);
         let width = (self.max - self.min) / self.n_buckets as f64;
@@ -135,11 +156,14 @@ impl Default for BucketRange {
 }
 
 impl BucketConfig {
+    /// Calculate bounds of all buckets.
+    ///
+    /// Returns `None` if there are zero buckets.
     pub fn get_bounds(&self) -> Option<BoundsVec> {
-        let mut new_bounds = self.range_input.get_bounds();
-        if new_bounds.is_empty() {
+        if self.range_input.n_buckets == 0 {
             return None;
         }
+        let mut new_bounds = self.range_input.get_bounds();
         new_bounds.sort_unstable_by_key(|&b| FloatOrd(b));
         Some(new_bounds)
     }
@@ -461,14 +485,17 @@ impl MetricPlot {
         }
     }
 
+    /// Name of the plot.
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// The key of the metric being plotted.
     pub fn key(&self) -> &MetricKey {
         &self.key
     }
 
+    /// Clone this plot's configuration.
     pub fn clone_config(&self) -> MetricPlotConfig {
         match &self.data {
             MetricPlotData::Counter(data) => MetricPlotConfig::Counter(data.config.clone()),

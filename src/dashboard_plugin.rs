@@ -19,6 +19,9 @@ impl Plugin for DashboardPlugin {
             )
             // Enforce strict ordering:
             // metrics producers (before Last) --> metrics consumers --> bucket clearing
-            .add_systems(Last, DashboardWindow::update_all.before(ClearBucketsSystem));
+            .add_systems(
+                Last,
+                DashboardWindow::update_plots_on_all_windows.before(ClearBucketsSystem),
+            );
     }
 }

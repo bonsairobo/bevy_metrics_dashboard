@@ -1,28 +1,33 @@
+#![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
 mod core_metrics_plugin;
+#[cfg(feature = "bevy_egui")]
 mod dashboard_plugin;
 mod dashboard_window;
 mod dropdown_list;
-pub mod namespace_tree;
+mod namespace_tree;
 pub mod plots;
 pub mod registry;
 mod registry_plugin;
 mod ring;
-pub mod search_bar;
+mod search_bar;
 
 #[cfg(feature = "render_metrics")]
 mod render_metrics_plugin;
 
 pub use core_metrics_plugin::CoreMetricsPlugin;
+#[cfg(feature = "bevy_egui")]
 pub use dashboard_plugin::DashboardPlugin;
-pub use dashboard_window::{CachedPlotConfigs, DashboardWindow, RequestPlot};
+pub use dashboard_window::{CachedPlotConfigs, DashboardConfig, DashboardWindow, RequestPlot};
+pub use namespace_tree::NamespaceTreeWindow;
 pub use registry_plugin::{ClearBucketsSystem, RegistryPlugin};
+pub use search_bar::SearchBar;
 
 #[cfg(feature = "render_metrics")]
 pub use render_metrics_plugin::RenderMetricsPlugin;
 
-pub use bevy_egui;
+pub use egui;
 pub use metrics;
 pub use metrics_util;
 
