@@ -9,7 +9,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-#[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
+#[cfg(feature = "bevy_egui")]
 use crate::RequestPlot;
 
 /// A widget that shows all metrics metadata in a tree, grouped by namespace.
@@ -60,7 +60,7 @@ impl NamespaceTreeWindow {
         self.refresh_period = period;
     }
 
-    #[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
+    #[cfg(feature = "bevy_egui")]
     /// Bevy system that draws all namespace tree window entities.
     pub fn draw_all(
         mut commands: Commands,

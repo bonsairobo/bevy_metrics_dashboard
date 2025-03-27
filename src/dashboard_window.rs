@@ -7,7 +7,7 @@ use crate::{
 use bevy::{prelude::*, utils::HashMap};
 use metrics::Unit;
 
-#[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
+#[cfg(feature = "bevy_egui")]
 use crate::namespace_tree::NamespaceTreeWindow;
 
 /// Event used to create a new plot in all [`DashboardWindow`] entities.
@@ -79,7 +79,7 @@ impl DashboardWindow {
         }
     }
 
-    #[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
+    #[cfg(feature = "bevy_egui")]
     /// Bevy system that draws all [`DashboardWindow`] entities into the
     /// [`bevy_egui::EguiContexts`].
     ///

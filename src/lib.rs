@@ -2,7 +2,7 @@
 #![doc = include_str!("../README.md")]
 
 mod core_metrics_plugin;
-#[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
+#[cfg(feature = "bevy_egui")]
 mod dashboard_plugin;
 mod dashboard_window;
 mod dropdown_list;
@@ -17,7 +17,7 @@ mod search_bar;
 mod render_metrics_plugin;
 
 pub use core_metrics_plugin::CoreMetricsPlugin;
-#[cfg(all(feature = "bevy_egui", not(feature = "egui_31")))]
+#[cfg(feature = "bevy_egui")]
 pub use dashboard_plugin::DashboardPlugin;
 pub use dashboard_window::{CachedPlotConfigs, DashboardConfig, DashboardWindow, RequestPlot};
 pub use namespace_tree::NamespaceTreeWindow;
@@ -27,15 +27,8 @@ pub use search_bar::SearchBar;
 #[cfg(feature = "render_metrics")]
 pub use render_metrics_plugin::RenderMetricsPlugin;
 
-// egui 0.30 is used by default, but the "egui_31" feature will override it.
-#[cfg(all(feature = "egui_30", not(feature = "egui_31")))]
-pub use egui_30 as egui;
-#[cfg(feature = "egui_31")]
-pub use egui_31 as egui;
-#[cfg(all(feature = "egui_30", not(feature = "egui_31")))]
-pub use egui_plot_30 as egui_plot;
-#[cfg(feature = "egui_31")]
-pub use egui_plot_31 as egui_plot;
+pub use egui;
+pub use egui_plot;
 
 pub use metrics;
 pub use metrics_util;
