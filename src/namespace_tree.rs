@@ -77,7 +77,7 @@ impl NamespaceTreeWindow {
                 .open(&mut open)
                 .show(ctxt, |ui| {
                     if let Some(result) = window.draw(&registry, ui) {
-                        requests.send(crate::RequestPlot {
+                        requests.write(crate::RequestPlot {
                             key: result.key,
                             unit: result.description.and_then(|d| d.unit),
                         });

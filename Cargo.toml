@@ -26,9 +26,9 @@ default = []
 render_metrics = ["bevy/bevy_core_pipeline"]
 
 [dependencies]
-bevy_egui = { version = "0.33", optional = true }
+bevy_egui = { version = "0.34", optional = true }
 egui = "0.31"
-egui_plot = "0.31"
+egui_plot = "0.32"
 float-ord = "0.3.2"
 fuzzy-matcher = "0.3.7"
 metrics = "0.24.1"
@@ -37,17 +37,15 @@ num-traits = "0.2.18"
 smallvec = "1.13.1"
 
 [dependencies.bevy]
-version = "0.15"
+version = "0.16"
 default-features = false
-# TODO: we shouldn't need to enable "wayland" unconditionally, but bevy 0.15
-# seems to have broken the build without it
-features = ["multi_threaded", "wayland"]
+features = ["bevy_log", "multi_threaded"]
 
 [dev-dependencies]
 rand = "0.8.5"
 
 [dev-dependencies.bevy]
-version = "0.15"
+version = "0.16"
 default-features = false
 features = ["bevy_sprite", "png", "wayland", "bevy_window"]
 
