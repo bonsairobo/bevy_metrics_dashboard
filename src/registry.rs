@@ -3,14 +3,15 @@
 use crate::egui::{text::LayoutJob, Color32, TextFormat};
 use crate::{metric_kind_str, unit_str};
 use bevy::{
+    platform::collections::HashMap,
     prelude::{default, Res, Resource},
-    utils::HashMap,
 };
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use metrics::{Counter, Gauge, Histogram, KeyName, Metadata, Recorder, SharedString, Unit};
 use metrics_util::{
     registry::{AtomicStorage, Registry},
-    storage::AtomicBucket, MetricKind,
+    storage::AtomicBucket,
+    MetricKind,
 };
 use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, RwLock};

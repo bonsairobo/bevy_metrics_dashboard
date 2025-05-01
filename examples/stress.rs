@@ -10,7 +10,9 @@ use rand::Rng;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin)
+        .add_plugins(EguiPlugin {
+            enable_multipass_for_primary_context: true,
+        })
         .add_plugins(RegistryPlugin::default())
         .add_plugins(CoreMetricsPlugin)
         .add_plugins(RenderMetricsPlugin)
@@ -47,7 +49,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             let scale = Vec3::splat(rng.gen::<f32>() * 2.0);
 
             sprites.push((
-                Sprite{
+                Sprite {
                     image: sprite_handle.clone(),
                     custom_size: Some(tile_size),
                     color: Color::WHITE,
@@ -57,7 +59,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
                     translation,
                     rotation,
                     scale,
-                }
+                },
             ));
         }
     }

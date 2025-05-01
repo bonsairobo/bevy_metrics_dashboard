@@ -407,7 +407,7 @@ impl HistogramData {
         last_bar.bar_width = avg_bar_width;
         last_bar.fill = Color32::BLUE;
 
-        BarChart::new(bars)
+        BarChart::new("histogram bar chart", bars)
     }
 
     fn update(&mut self) {
@@ -565,7 +565,7 @@ fn draw_plot(
             if data.config.derivative {
                 derivative(&mut plot_points);
             }
-            let line = Line::new(PlotPoints::Owned(plot_points));
+            let line = Line::new("counter line", PlotPoints::Owned(plot_points));
             let mut plot = new_plot().x_axis_label("frame");
             if let Some(unit) = unit {
                 plot = plot.y_axis_label(unit_str(unit));
@@ -586,7 +586,7 @@ fn draw_plot(
             if data.config.derivative {
                 derivative(&mut plot_points);
             }
-            let line = Line::new(PlotPoints::Owned(plot_points));
+            let line = Line::new("gauge line", PlotPoints::Owned(plot_points));
             let mut plot = new_plot().x_axis_label("frame");
             if let Some(unit) = unit {
                 plot = plot.y_axis_label(unit_str(unit));

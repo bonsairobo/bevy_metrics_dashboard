@@ -4,7 +4,7 @@ use crate::{
     registry::{MetricKey, MetricsRegistry},
     search_bar::SearchBar,
 };
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform::collections::HashMap, prelude::*};
 use metrics::Unit;
 
 #[cfg(feature = "bevy_egui")]
