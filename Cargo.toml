@@ -49,7 +49,7 @@ rand = "0.8.5"
 [dev-dependencies.bevy]
 version = "0.15"
 default-features = false
-features = ["bevy_sprite", "png", "wayland", "bevy_window"]
+features = ["bevy_sprite", "png", "wayland", "bevy_window", "webgl2"]
 
 [[example]]
 name = "stress"
