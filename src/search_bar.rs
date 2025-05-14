@@ -1,12 +1,13 @@
-//! Widget for search the metrics registry.
+//! Widget for searching the metrics registry.
 
 use crate::egui::{TextEdit, Ui};
 use crate::{
     dropdown_list::dropdown_list,
     registry::{MetricsRegistry, SearchResult},
 };
-use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
-use std::time::{Duration, Instant};
+use bevy::platform::time::Instant;
+use bevy::tasks::{futures, AsyncComputeTaskPool, Task};
+use std::time::Duration;
 
 /// A widget that searches the [`MetricsRegistry`] with fuzzy string matching.
 pub struct SearchBar {
@@ -62,9 +63,9 @@ impl SearchBar {
             .inner;
 
         // Check if we have new search results.
-        if let Some(task) = self.search_task.take() {
-            if task.is_finished() {
-                self.search_results = block_on(task);
+        if let Some(mut task) = self.search_task.take() {
+            if let Some(search_results) = futures::check_ready(&mut task) {
+                self.search_results = search_results;
                 self.search_results
                     .sort_by(|r1, r2| r1.key.key.name().cmp(r2.key.key.name()));
             } else {

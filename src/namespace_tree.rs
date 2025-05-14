@@ -1,8 +1,9 @@
 use crate::egui::{self, Ui};
 use crate::registry::{MetricsRegistry, SearchResult};
+use bevy::tasks::futures;
 use bevy::{
     prelude::*,
-    tasks::{block_on, AsyncComputeTaskPool, Task},
+    tasks::{AsyncComputeTaskPool, Task},
 };
 use std::{
     sync::atomic::{AtomicU64, Ordering},
@@ -104,9 +105,9 @@ impl NamespaceTreeWindow {
         }
 
         // Check if we have new search results.
-        if let Some(task) = self.refresh_task.take() {
-            if task.is_finished() {
-                self.roots = block_on(task);
+        if let Some(mut task) = self.refresh_task.take() {
+            if let Some(roots) = futures::check_ready(&mut task) {
+                self.roots = roots;
             } else {
                 self.refresh_task = Some(task);
             }

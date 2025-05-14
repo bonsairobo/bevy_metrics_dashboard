@@ -7,13 +7,13 @@ use bevy::{
     prelude::{default, Res, Resource},
 };
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use metrics::atomics::AtomicU64;
 use metrics::{Counter, Gauge, Histogram, KeyName, Metadata, Recorder, SharedString, Unit};
 use metrics_util::{
     registry::{AtomicStorage, Registry},
     storage::AtomicBucket,
     MetricKind,
 };
-use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, RwLock};
 
 /// Tracks all metrics in the current process.
