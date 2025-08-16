@@ -70,7 +70,9 @@ impl NamespaceTreeWindow {
         mut requests: EventWriter<RequestPlot>,
         mut windows: Query<(Entity, &mut Self)>,
     ) {
-        let ctxt = ctxts.ctx_mut();
+        let Ok(ctxt) = ctxts.ctx_mut() else {
+            return;
+        };
         for (entity, mut window) in &mut windows {
             let mut open = true;
             egui::Window::new(&window.title)
