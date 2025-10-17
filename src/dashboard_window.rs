@@ -94,7 +94,9 @@ impl DashboardWindow {
     ) {
         let requests: Vec<_> = requests.read().cloned().collect();
 
-        let ctxt = ctxts.ctx_mut();
+        let Ok(ctxt) = ctxts.ctx_mut() else {
+            return;
+        };
         for (entity, mut window) in &mut windows {
             for RequestPlot { key, unit } in requests.iter().cloned() {
                 window.add_plot(&registry, &cached_configs, key, unit);

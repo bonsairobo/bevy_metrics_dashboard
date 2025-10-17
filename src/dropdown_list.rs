@@ -16,16 +16,18 @@ where
     let popup_id = ui.make_persistent_id(id_source);
 
     if drop_from_widget.clicked() {
-        ui.memory_mut(|m| m.open_popup(popup_id));
+        Popup::open_id(ui.ctx(), popup_id);
     }
 
     let mut return_val = None;
-    popup_below_widget(
-        ui,
-        popup_id,
-        &drop_from_widget,
-        PopupCloseBehavior::CloseOnClickOutside,
-        |ui: &mut Ui| {
+    egui::Popup::from_response(&drop_from_widget)
+        .layout(Layout::top_down_justified(Align::LEFT))
+        .open_memory(None)
+        .close_behavior(PopupCloseBehavior::CloseOnClickOutside)
+        .id(popup_id)
+        .width(drop_from_widget.rect.width())
+        .show(|ui| {
+            ui.set_min_width(ui.available_width());
             let select_first = ui.input(|i| i.key_pressed(Key::Enter));
             ScrollArea::vertical().max_height(200.0).show(ui, |ui| {
                 let mut first = true;
@@ -37,13 +39,12 @@ where
                     if ui.selectable_label(false, text.into()).clicked() || (select_first && first)
                     {
                         return_val = Some(item);
-                        ui.memory_mut(|m| m.close_popup());
+                        ui.close();
                     }
                     first = false;
                 }
             });
-        },
-    );
+        });
 
     return_val
 }

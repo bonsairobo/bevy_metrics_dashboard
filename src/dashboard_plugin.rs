@@ -4,7 +4,7 @@ use crate::{
     ClearBucketsSystem, DashboardWindow,
 };
 use bevy::prelude::*;
-use bevy_egui::EguiContextPass;
+use bevy_egui::EguiPrimaryContextPass;
 
 /// Updates and renders all [`DashboardWindow`] and [`NamespaceTreeWindow`]
 /// entities.
@@ -15,7 +15,7 @@ impl Plugin for DashboardPlugin {
         app.add_event::<RequestPlot>()
             .init_resource::<CachedPlotConfigs>()
             .add_systems(
-                EguiContextPass,
+                EguiPrimaryContextPass,
                 (DashboardWindow::draw_all, NamespaceTreeWindow::draw_all),
             )
             // Enforce strict ordering:

@@ -10,9 +10,7 @@ use rand::Rng;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin {
-            enable_multipass_for_primary_context: true,
-        })
+        .add_plugins(EguiPlugin::default())
         .add_plugins(RegistryPlugin::default())
         .add_plugins(CoreMetricsPlugin)
         .add_plugins(RenderMetricsPlugin)
